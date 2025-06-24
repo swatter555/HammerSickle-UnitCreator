@@ -28,9 +28,7 @@
 	<ItemGroup>
 	  <Folder Include="Converters\" />
 	  <Folder Include="Services\" />
-	  <Folder Include="ViewModels\Tabs\" />
 	  <Folder Include="Views\Controls\" />
-	  <Folder Include="Views\Tabs\" />
 	</ItemGroup>
 
 </Project>

@@ -1,4 +1,6 @@
-﻿namespace HammerSickle.UnitCreator.ViewModels.Base
+﻿using HammerSickle.UnitCreator.ViewModels.Base;
+
+namespace HammerSickle.UnitCreator.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
