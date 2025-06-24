@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HammerSickle.UnitCreator.ViewModels.Tabs
 {
-    internal class CombatUnitsTabViewModel
+    public class CombatUnitsTabViewModel
     {
     }
 }
