@@ -3,18 +3,63 @@
         xmlns:vm="using:HammerSickle.UnitCreator.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
         x:Class="HammerSickle.UnitCreator.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="HammerSickle.UnitCreator">
+        Title="Hammer &amp; Sickle Unit Creator"
+        Width="1600" Height="1200"
+		WindowStartupLocation="CenterScreen">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
+	<Design.DataContext>
+		<vm:MainWindowViewModel/>
+	</Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+	<DockPanel>
+		<!-- Menu Bar -->
+		<Menu DockPanel.Dock="Top">
+			<MenuItem Header="_File">
+				<MenuItem Header="_New" Command="{Binding NewCommand}" InputGesture="Ctrl+N"/>
+				<MenuItem Header="_Open..." Command="{Binding OpenCommand}" InputGesture="Ctrl+O"/>
+				<Separator/>
+				<MenuItem Header="_Save" Command="{Binding SaveCommand}" InputGesture="Ctrl+S"/>
+				<MenuItem Header="Save _As..." Command="{Binding SaveAsCommand}" InputGesture="Ctrl+Shift+S"/>
+				<Separator/>
+				<MenuItem Header="_Export .sce" Command="{Binding ExportCommand}" InputGesture="Ctrl+E"/>
+				<Separator/>
+				<MenuItem Header="E_xit" Command="{Binding ExitCommand}" InputGesture="Alt+F4"/>
+			</MenuItem>
+		</Menu>
+
+		<!-- Toolbar -->
+		<StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Background="LightGray" Margin="4">
+			<Button Content="New" Command="{Binding NewCommand}" Margin="2" Padding="8,4"/>
+			<Button Content="Open" Command="{Binding OpenCommand}" Margin="2" Padding="8,4"/>
+			<Button Content="Save" Command="{Binding SaveCommand}" Margin="2" Padding="8,4"/>
+			<Separator/>
+			<Button Content="Export" Command="{Binding ExportCommand}" Margin="2" Padding="8,4"/>
+		</StackPanel>
+
+		<!-- Status Bar -->
+		<Border DockPanel.Dock="Bottom" Background="LightGray" BorderBrush="Gray" BorderThickness="0,1,0,0">
+			<TextBlock Text="{Binding StatusMessage}" Margin="8,4" VerticalAlignment="Center"/>
+		</Border>
+
+		<!-- Main Content - Tabbed Interface -->
+		<TabControl SelectedIndex="{Binding SelectedTabIndex}" Margin="4">
+			<TabItem Header="Leaders">
+				<ContentPresenter Content="{Binding LeadersTab}"/>
+			</TabItem>
+			<TabItem Header="Weapon Systems">
+				<ContentPresenter Content="{Binding WeaponSystemsTab}"/>
+			</TabItem>
+			<TabItem Header="Unit Profiles">
+				<ContentPresenter Content="{Binding UnitProfilesTab}"/>
+			</TabItem>
+			<TabItem Header="Combat Units">
+				<ContentPresenter Content="{Binding CombatUnitsTab}"/>
+			</TabItem>
+		</TabControl>
+	</DockPanel>
 
 </Window>

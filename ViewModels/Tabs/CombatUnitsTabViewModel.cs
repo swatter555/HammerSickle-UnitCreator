@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using HammerSickle.UnitCreator.ViewModels.Base;
 
 namespace HammerSickle.UnitCreator.ViewModels.Tabs
 {
-    public class CombatUnitsTabViewModel
+    public class CombatUnitsTabViewModel : ViewModelBase
     {
+        public string TabName => "Combat Units";
     }
 }

@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using HammerSickle.UnitCreator.ViewModels.Base;
 
 namespace HammerSickle.UnitCreator.ViewModels.Tabs
 {
-    public class UnitProfilesTabViewModel
+    public class UnitProfilesTabViewModel : ViewModelBase
     {
+        public string TabName => "Unit Profiles";
     }
 }
