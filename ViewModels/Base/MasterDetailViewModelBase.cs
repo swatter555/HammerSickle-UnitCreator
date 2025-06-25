@@ -6,7 +6,6 @@ using System.Reactive.Linq;
 using Avalonia.Controls.Templates;
 using ReactiveUI;
 using HammerSickle.UnitCreator.Services;
-using ValidationResult = HammerSickle.UnitCreator.Services.ValidationResult;
 
 namespace HammerSickle.UnitCreator.ViewModels.Base
 {

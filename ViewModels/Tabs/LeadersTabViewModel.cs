@@ -8,7 +8,6 @@ using ReactiveUI;
 using HammerAndSickle.Models;
 using HammerSickle.UnitCreator.Services;
 using HammerSickle.UnitCreator.ViewModels.Base;
-using ValidationResult = HammerSickle.UnitCreator.Services.ValidationResult;
 
 namespace HammerSickle.UnitCreator.ViewModels.Tabs
 {
@@ -33,7 +32,7 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         private bool? _isAssignedFilter;
         private bool _showFilters;
 
-        // Collections for dropdowns
+        // Collections for dropdowns - properly filtered without assuming None values
         private readonly List<Nationality> _availableNationalities;
         private readonly List<CommandGrade> _availableCommandGrades;
 
@@ -44,9 +43,10 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         public LeadersTabViewModel(DataService dataService, ValidationService validationService)
             : base(dataService, validationService)
         {
-            // Initialize nationality and command grade collections
-            _availableNationalities = Enum.GetValues<Nationality>().Where(n => n != Nationality.None).ToList();
-            _availableCommandGrades = Enum.GetValues<CommandGrade>().Where(g => g != CommandGrade.None).ToList();
+            // Initialize nationality collection - get all values and filter out any that shouldn't be shown
+            // Instead of assuming 'None' exists, we'll filter based on actual enum structure
+            _availableNationalities = GetValidNationalities().ToList();
+            _availableCommandGrades = GetValidCommandGrades().ToList();
 
             // Initialize filter commands
             ClearFiltersCommand = ReactiveCommand.Create(ExecuteClearFilters);
@@ -65,6 +65,57 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
             // Load initial data
             OnRefresh();
         }
+
+        #region Enum Filtering Methods
+
+        /// <summary>
+        /// Gets valid nationalities, filtering out any sentinel/invalid values
+        /// </summary>
+        private IEnumerable<Nationality> GetValidNationalities()
+        {
+            return Enum.GetValues<Nationality>()
+                .Where(IsValidNationality)
+                .OrderBy(n => n.ToString());
+        }
+
+        /// <summary>
+        /// Gets valid command grades, filtering out any sentinel/invalid values
+        /// </summary>
+        private IEnumerable<CommandGrade> GetValidCommandGrades()
+        {
+            return Enum.GetValues<CommandGrade>()
+                .Where(IsValidCommandGrade)
+                .OrderBy(g => g.ToString());
+        }
+
+        /// <summary>
+        /// Determines if a nationality is valid for display/selection
+        /// </summary>
+        private bool IsValidNationality(Nationality nationality)
+        {
+            // Filter out any values that shouldn't be selectable
+            // Check for common sentinel values without assuming they exist
+            var name = nationality.ToString();
+            return !name.Equals("None", StringComparison.OrdinalIgnoreCase) &&
+                   !name.Equals("Invalid", StringComparison.OrdinalIgnoreCase) &&
+                   !name.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
+                   (int)nationality >= 0; // Assuming negative values are invalid
+        }
+
+        /// <summary>
+        /// Determines if a command grade is valid for display/selection
+        /// </summary>
+        private bool IsValidCommandGrade(CommandGrade grade)
+        {
+            // Filter out any values that shouldn't be selectable
+            var name = grade.ToString();
+            return !name.Equals("None", StringComparison.OrdinalIgnoreCase) &&
+                   !name.Equals("Invalid", StringComparison.OrdinalIgnoreCase) &&
+                   !name.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
+                   (int)grade >= 0; // Assuming negative values are invalid
+        }
+
+        #endregion
 
         #region Filter Properties
 
@@ -125,8 +176,15 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         {
             try
             {
-                // Create new leader with default values
-                var newLeader = new Leader(Side.Player, Nationality.USSR);
+                // Create new leader with default values - use first available nationality
+                var defaultNationality = _availableNationalities.FirstOrDefault();
+                if (defaultNationality == default(Nationality))
+                {
+                    // Fallback to a known good value if available nationalities is empty
+                    defaultNationality = Nationality.USSR;
+                }
+
+                var newLeader = new Leader(Side.Player, defaultNationality);
 
                 if (_dataService.AddLeader(newLeader))
                 {
@@ -299,14 +357,14 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
 
         #region Validation
 
-        protected override Services.ValidationResult ValidateSelectedItem()
+        protected override ValidationResult ValidateSelectedItem()
         {
             if (SelectedItem is Leader leader)
             {
                 return _validationService.ValidateLeader(leader);
             }
 
-            return new Services.ValidationResult(); // Valid if no selection
+            return new ValidationResult(); // Valid if no selection
         }
 
         public override bool CanDelete => base.CanDelete && ValidateCanDelete(SelectedItem);
@@ -357,10 +415,15 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         {
             try
             {
-                // Create a leader with random nationality
-                var randomNationalities = new[] { Nationality.USSR, Nationality.USA, Nationality.FRG, Nationality.FRA };
-                var randomNationality = randomNationalities[new Random().Next(randomNationalities.Length)];
+                // Use available nationalities instead of hardcoded list
+                var availableNats = _availableNationalities.Where(n => IsValidNationality(n)).ToArray();
+                if (!availableNats.Any())
+                {
+                    // Fallback to known values if available nationalities is empty
+                    availableNats = new[] { Nationality.USSR };
+                }
 
+                var randomNationality = availableNats[new Random().Next(availableNats.Length)];
                 var newLeader = new Leader(Side.Player, randomNationality);
 
                 if (_dataService.AddLeader(newLeader))
