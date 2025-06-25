@@ -6,6 +6,7 @@
              x:Class="HammerSickle.UnitCreator.Views.Controls.MasterDetailControl"
              x:Name="MasterDetailControlRoot">
 
+	<!-- Design-Time DataContext -->
 	<Design.DataContext>
 		<x:Null/>
 	</Design.DataContext>
@@ -24,9 +25,9 @@
 				<StackPanel Orientation="Horizontal" Spacing="6">
 
 					<!-- Add Button -->
-					<Button Content="Add"
-					        Command="{Binding AddCommand}"
-					        ToolTip.Tip="{Binding AddToolTip, FallbackValue='Add new item'}"
+					<Button Content="{Binding #MasterDetailControlRoot.AddButtonText}"
+					        Command="{Binding #MasterDetailControlRoot.AddCommand}"
+					        ToolTip.Tip="{Binding #MasterDetailControlRoot.AddToolTip}"
 					        Classes="success"
 					        Padding="12,4"
 					        MinWidth="60">
@@ -40,18 +41,21 @@
 								<Setter Property="Background" Value="#218838"/>
 								<Setter Property="BorderBrush" Value="#1E7E34"/>
 							</Style>
+							<Style Selector="Button.success:disabled">
+								<Setter Property="Opacity" Value="0.6"/>
+							</Style>
 						</Button.Styles>
 					</Button>
 
 					<!-- Delete Button -->
 					<Button Content="Delete"
-					        Command="{Binding DeleteCommand}"
-					        CommandParameter="{Binding SelectedItem}"
-					        ToolTip.Tip="{Binding DeleteToolTip, FallbackValue='Delete selected item'}"
+					        Command="{Binding #MasterDetailControlRoot.DeleteCommand}"
+					        CommandParameter="{Binding #MasterDetailControlRoot.SelectedItem}"
+					        ToolTip.Tip="{Binding #MasterDetailControlRoot.DeleteToolTip}"
 					        Classes="danger"
 					        Padding="12,4"
 					        MinWidth="60"
-					        IsEnabled="{Binding CanDelete}">
+					        IsEnabled="{Binding #MasterDetailControlRoot.CanDelete}">
 						<Button.Styles>
 							<Style Selector="Button.danger">
 								<Setter Property="Background" Value="#DC3545"/>
@@ -72,13 +76,13 @@
 
 					<!-- Clone Button -->
 					<Button Content="Clone"
-					        Command="{Binding CloneCommand}"
-					        CommandParameter="{Binding SelectedItem}"
-					        ToolTip.Tip="{Binding CloneToolTip, FallbackValue='Clone selected item'}"
+					        Command="{Binding #MasterDetailControlRoot.CloneCommand}"
+					        CommandParameter="{Binding #MasterDetailControlRoot.SelectedItem}"
+					        ToolTip.Tip="{Binding #MasterDetailControlRoot.CloneToolTip}"
 					        Classes="secondary"
 					        Padding="12,4"
 					        MinWidth="60"
-					        IsEnabled="{Binding CanClone}">
+					        IsEnabled="{Binding #MasterDetailControlRoot.CanClone}">
 						<Button.Styles>
 							<Style Selector="Button.secondary">
 								<Setter Property="Background" Value="#6C757D"/>
@@ -99,7 +103,7 @@
 
 					<!-- Refresh Button -->
 					<Button Content="↻"
-					        Command="{Binding RefreshCommand}"
+					        Command="{Binding #MasterDetailControlRoot.RefreshCommand}"
 					        ToolTip.Tip="Refresh list"
 					        Classes="outline"
 					        Padding="8,4"
@@ -114,6 +118,9 @@
 							<Style Selector="Button.outline:pointerover">
 								<Setter Property="Background" Value="#F8F9FA"/>
 								<Setter Property="BorderBrush" Value="#ADB5BD"/>
+							</Style>
+							<Style Selector="Button.outline:disabled">
+								<Setter Property="Opacity" Value="0.5"/>
 							</Style>
 						</Button.Styles>
 					</Button>
@@ -132,9 +139,10 @@
 					           VerticalAlignment="Center"
 					           Margin="0,0,6,0"
 					           FontWeight="Medium"/>
-					<TextBox Text="{Binding FilterText}"
-					         Watermark="{Binding FilterWatermark, FallbackValue='Type to filter...'}"
-					         VerticalAlignment="Center"/>
+					<TextBox Text="{Binding #MasterDetailControlRoot.FilterText}"
+					         Watermark="{Binding #MasterDetailControlRoot.FilterWatermark}"
+					         VerticalAlignment="Center"
+					         MaxLength="500"/>
 				</DockPanel>
 			</Border>
 
@@ -146,11 +154,11 @@
 			        Padding="8,4">
 				<DockPanel>
 					<TextBlock DockPanel.Dock="Left"
-					           Text="{Binding ItemsCountText, FallbackValue='0 items'}"
+					           Text="{Binding #MasterDetailControlRoot.ItemsCountText}"
 					           FontSize="11"
 					           Foreground="#6C757D"/>
 					<TextBlock DockPanel.Dock="Right"
-					           Text="{Binding SelectionText}"
+					           Text="{Binding #MasterDetailControlRoot.SelectionText}"
 					           FontSize="11"
 					           Foreground="#6C757D"
 					           HorizontalAlignment="Right"/>
@@ -158,12 +166,13 @@
 			</Border>
 
 			<!-- Master List -->
-			<ListBox ItemsSource="{Binding Items}"
-			         SelectedItem="{Binding SelectedItem}"
+			<ListBox ItemsSource="{Binding #MasterDetailControlRoot.ItemsSource}"
+			         SelectedItem="{Binding #MasterDetailControlRoot.SelectedItem}"
 			         Background="White"
 			         BorderBrush="#DEE2E6"
 			         BorderThickness="0"
-			         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+			         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+			         ItemTemplate="{Binding #MasterDetailControlRoot.MasterItemTemplate}">
 
 				<ListBox.Styles>
 					<Style Selector="ListBoxItem">
@@ -178,8 +187,12 @@
 					<Style Selector="ListBoxItem:selected /template/ ContentPresenter">
 						<Setter Property="Foreground" Value="#1976D2"/>
 					</Style>
+					<Style Selector="ListBoxItem:pointerover">
+						<Setter Property="Background" Value="#F5F5F5"/>
+					</Style>
 				</ListBox.Styles>
 
+				<!-- Fallback ItemTemplate (used when MasterItemTemplate is null) -->
 				<ListBox.ItemTemplate>
 					<DataTemplate>
 						<DockPanel>
@@ -199,10 +212,11 @@
 								           TextTrimming="CharacterEllipsis"/>
 
 								<!-- Secondary Text -->
-								<TextBlock Text="{Binding DisplaySubtext}"
+								<TextBlock Text="{Binding DisplaySubtext, FallbackValue=''}"
 								           FontSize="11"
 								           Foreground="#6C757D"
-								           TextTrimming="CharacterEllipsis"/>
+								           TextTrimming="CharacterEllipsis"
+								           IsVisible="{Binding DisplaySubtext, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
 							</StackPanel>
 						</DockPanel>
 					</DataTemplate>
@@ -228,7 +242,7 @@
 				<DockPanel>
 					<!-- Title -->
 					<TextBlock DockPanel.Dock="Left"
-					           Text="{Binding DetailTitle, FallbackValue='Item Details'}"
+					           Text="{Binding #MasterDetailControlRoot.DetailTitle}"
 					           FontSize="16"
 					           FontWeight="SemiBold"
 					           VerticalAlignment="Center"/>
@@ -241,10 +255,10 @@
 
 						<!-- Validation Status Badge -->
 						<Border Classes="badge"
-						        Classes.success="{Binding IsSelectedItemValid}"
-						        Classes.danger="{Binding !IsSelectedItemValid}"
-						        IsVisible="{Binding !!SelectedItem}">
-							<TextBlock Text="{Binding ValidationStatusText, FallbackValue='Valid'}"
+						        Classes.success="{Binding #MasterDetailControlRoot.IsSelectedItemValid}"
+						        Classes.danger="{Binding !#MasterDetailControlRoot.IsSelectedItemValid}"
+						        IsVisible="{Binding !!#MasterDetailControlRoot.SelectedItem}">
+							<TextBlock Text="{Binding #MasterDetailControlRoot.ValidationStatusText}"
 							           FontSize="10"
 							           FontWeight="Medium"/>
 							<Border.Styles>
@@ -273,7 +287,7 @@
 
 						<!-- Modified Status Badge -->
 						<Border Classes="badge warning"
-						        IsVisible="{Binding IsSelectedItemModified}">
+						        IsVisible="{Binding #MasterDetailControlRoot.IsSelectedItemModified}">
 							<TextBlock Text="Modified"
 							           FontSize="10"
 							           FontWeight="Medium"
@@ -300,7 +314,7 @@
 				<!-- Single wrapper Panel to contain both states -->
 				<Panel>
 					<!-- No Selection State -->
-					<Panel IsVisible="{Binding !SelectedItem}">
+					<Panel IsVisible="{Binding !#MasterDetailControlRoot.SelectedItem}">
 						<StackPanel HorizontalAlignment="Center"
 									VerticalAlignment="Center"
 									Spacing="16">
@@ -308,12 +322,14 @@
 									   FontSize="48"
 									   HorizontalAlignment="Center"
 									   Opacity="0.3"/>
-							<TextBlock Text="{Binding NoSelectionMessage, FallbackValue='Select an item to view details'}"
+							<TextBlock Text="{Binding #MasterDetailControlRoot.NoSelectionMessage}"
 									   FontSize="14"
 									   Foreground="#6C757D"
-									   HorizontalAlignment="Center"/>
-							<Button Content="{Binding AddButtonText, FallbackValue='Add New Item'}"
-									Command="{Binding AddCommand}"
+									   HorizontalAlignment="Center"
+									   TextAlignment="Center"
+									   TextWrapping="Wrap"/>
+							<Button Content="{Binding #MasterDetailControlRoot.AddButtonText}"
+									Command="{Binding #MasterDetailControlRoot.AddCommand}"
 									Classes="primary"
 									HorizontalAlignment="Center"
 									Padding="16,8">
@@ -327,20 +343,36 @@
 										<Setter Property="Background" Value="#0056B3"/>
 										<Setter Property="BorderBrush" Value="#004085"/>
 									</Style>
+									<Style Selector="Button.primary:disabled">
+										<Setter Property="Opacity" Value="0.6"/>
+									</Style>
 								</Button.Styles>
 							</Button>
 						</StackPanel>
 					</Panel>
 
-					<!-- Detail Editor Content -->
-					<ContentPresenter Content="{Binding SelectedItem}"
-									  ContentTemplate="{Binding DetailTemplate}"
-									  IsVisible="{Binding !!SelectedItem}"/>
+					<!-- Detail Editor Content with Fallback -->
+					<ContentPresenter Content="{Binding #MasterDetailControlRoot.SelectedItem}"
+									  ContentTemplate="{Binding #MasterDetailControlRoot.DetailTemplate}"
+									  IsVisible="{Binding !!#MasterDetailControlRoot.SelectedItem}">
+						<!-- Fallback for when DetailTemplate is null -->
+						<ContentPresenter.ContentTemplate>
+							<DataTemplate>
+								<StackPanel Spacing="8" Margin="16">
+									<TextBlock Text="Detail View" FontSize="16" FontWeight="Bold"/>
+									<TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+									<TextBlock Text="⚠️ No DetailTemplate provided - using fallback"
+									           FontSize="11" FontStyle="Italic"
+									           Foreground="Orange" Margin="0,8,0,0"/>
+								</StackPanel>
+							</DataTemplate>
+						</ContentPresenter.ContentTemplate>
+					</ContentPresenter>
 				</Panel>
 			</ScrollViewer>
 		</DockPanel>
 
-		<!-- Validation Summary Overlay -->
+		<!-- Validation Summary Overlay with Enhanced Styling -->
 		<Border Grid.Column="2"
 		        Background="#FFF3CD"
 		        BorderBrush="#FFEAA7"
@@ -349,7 +381,8 @@
 		        Margin="16,16,16,0"
 		        Padding="12,8"
 		        VerticalAlignment="Top"
-		        IsVisible="{Binding ShowValidationSummary}">
+		        IsVisible="{Binding #MasterDetailControlRoot.ShowValidationSummary}"
+		        BoxShadow="0 2 8 0 #00000020">
 			<DockPanel>
 				<TextBlock DockPanel.Dock="Left"
 				           Text="⚠️"
@@ -357,18 +390,20 @@
 				           Margin="0,0,8,0"/>
 				<Button DockPanel.Dock="Right"
 				        Content="✕"
-				        Command="{Binding HideValidationSummaryCommand}"
+				        Command="{Binding #MasterDetailControlRoot.HideValidationSummaryCommand}"
 				        Background="Transparent"
 				        BorderThickness="0"
 				        Padding="4"
 				        VerticalAlignment="Top"
-				        FontSize="10"/>
+				        FontSize="10"
+				        ToolTip.Tip="Hide validation summary"/>
 				<StackPanel>
 					<TextBlock Text="Validation Issues"
 					           FontWeight="Medium"
 					           FontSize="12"
 					           Foreground="#856404"/>
-					<ItemsControl ItemsSource="{Binding ValidationSummaryItems}">
+					<ItemsControl ItemsSource="{Binding #MasterDetailControlRoot.ValidationSummaryItems}"
+					              MaxHeight="200">
 						<ItemsControl.ItemTemplate>
 							<DataTemplate>
 								<TextBlock Text="{Binding}"

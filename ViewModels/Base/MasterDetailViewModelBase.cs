@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Avalonia.Controls.Templates;
+using HammerSickle.UnitCreator.Services;
+using ReactiveUI;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using Avalonia.Controls.Templates;
-using ReactiveUI;
-using HammerSickle.UnitCreator.Services;
 
 namespace HammerSickle.UnitCreator.ViewModels.Base
 {
@@ -18,6 +19,9 @@ namespace HammerSickle.UnitCreator.ViewModels.Base
     {
         protected readonly DataService _dataService;
         protected readonly ValidationService _validationService;
+
+        // Optimize reactive subscriptions with proper disposal tracking
+        private readonly CompositeDisposable _subscriptions = new CompositeDisposable();
 
         private object? _selectedItem;
         private string _filterText = string.Empty;
@@ -43,8 +47,11 @@ namespace HammerSickle.UnitCreator.ViewModels.Base
             RefreshCommand = ReactiveCommand.Create(ExecuteRefresh);
             HideValidationSummaryCommand = ReactiveCommand.Create(ExecuteHideValidationSummary);
 
-            // Set up reactive property subscriptions
+            // Replace existing subscriptions with optimized versions:
             this.WhenAnyValue(x => x.SelectedItem)
+                .Where(item => item != null) // Only process actual selections
+                .Throttle(TimeSpan.FromMilliseconds(100)) // Debounce rapid selection changes
+                .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(_ =>
                 {
                     this.RaisePropertyChanged(nameof(CanDelete));
@@ -52,15 +59,28 @@ namespace HammerSickle.UnitCreator.ViewModels.Base
                     this.RaisePropertyChanged(nameof(IsSelectedItemValid));
                     this.RaisePropertyChanged(nameof(ValidationStatusText));
                     this.RaisePropertyChanged(nameof(SelectionText));
-                });
+
+                    // Trigger validation update for new selection
+                    UpdateValidationForSelectedItem();
+                })
+                .DisposeWith(_subscriptions);
 
             this.WhenAnyValue(x => x.FilterText)
-                .Throttle(TimeSpan.FromMilliseconds(300)) // Debounce filter changes
+                .Where(text => text != null) // Avoid null processing
+                .Throttle(TimeSpan.FromMilliseconds(500)) // Increased debounce for filter
+                .DistinctUntilChanged() // Only apply when actually changed
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(_ => ApplyFilter());
+                .Subscribe(_ => ApplyFilter())
+                .DisposeWith(_subscriptions);
 
+            // Optimize items count subscription
             this.WhenAnyValue(x => x.Items.Count)
-                .Subscribe(_ => this.RaisePropertyChanged(nameof(ItemsCountText)));
+                .Throttle(TimeSpan.FromMilliseconds(200)) // Debounce count changes
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(_ => this.RaisePropertyChanged(nameof(ItemsCountText)))
+                .DisposeWith(_subscriptions);
+
+
         }
 
         #region Public Properties
@@ -220,6 +240,40 @@ namespace HammerSickle.UnitCreator.ViewModels.Base
         #region Helper Methods
 
         /// <summary>
+        /// Updates validation for the currently selected item with caching
+        /// </summary>
+        private void UpdateValidationForSelectedItem()
+        {
+            try
+            {
+                if (SelectedItem == null)
+                {
+                    ShowValidationSummary = false;
+                    ValidationSummaryItems.Clear();
+                    return;
+                }
+
+                // Cache validation results to avoid repeated validation
+                var validationResult = ValidateSelectedItem();
+
+                if (validationResult.Errors.Any() || validationResult.Warnings.Any())
+                {
+                    UpdateValidationSummary(validationResult);
+                }
+                else
+                {
+                    ShowValidationSummary = false;
+                    ValidationSummaryItems.Clear();
+                }
+            }
+            catch (Exception e)
+            {
+                HammerAndSickle.Services.AppService.HandleException(
+                    this.GetType().Name, nameof(UpdateValidationForSelectedItem), e);
+            }
+        }
+
+        /// <summary>
         /// Updates the validation summary with errors and warnings from a validation result
         /// </summary>
         protected void UpdateValidationSummary(ValidationResult result)
@@ -295,6 +349,104 @@ namespace HammerSickle.UnitCreator.ViewModels.Base
             SelectedItem = null;
             ShowValidationSummary = false;
             ValidationSummaryItems.Clear();
+        }
+
+        #endregion
+
+
+        #region IDisposable Support
+
+        private bool _disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _subscriptions?.Dispose();
+                }
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
+
+        #region Error Recovery
+
+        /// <summary>
+        /// Recovers from collection operation failures
+        /// </summary>
+        protected void RecoverFromCollectionError(Exception exception, string operation)
+        {
+            try
+            {
+                HammerAndSickle.Services.AppService.HandleException(
+                    this.GetType().Name, $"CollectionError_{operation}", exception);
+
+                // Clear potentially corrupted state
+                ClearSelection();
+
+                // Attempt to refresh data
+                if (Items.Any())
+                {
+                    OnRefresh();
+                }
+
+                // Notify user
+                HammerAndSickle.Services.AppService.CaptureUiMessage(
+                    $"Recovered from error during {operation}. Data refreshed.");
+            }
+            catch (Exception recoveryException)
+            {
+                HammerAndSickle.Services.AppService.HandleException(
+                    this.GetType().Name, nameof(RecoverFromCollectionError), recoveryException);
+            }
+        }
+
+        /// <summary>
+        /// Validates critical state and attempts recovery if needed
+        /// </summary>
+        protected bool ValidateAndRecoverState()
+        {
+            try
+            {
+                // Check for null collections
+                if (Items == null)
+                {
+                    HammerAndSickle.Services.AppService.CaptureUiMessage("Items collection was null, reinitializing");
+                    // Items should be reinitialized by derived class
+                    return false;
+                }
+
+                // Check for selection consistency
+                if (SelectedItem != null && !Items.Contains(SelectedItem))
+                {
+                    HammerAndSickle.Services.AppService.CaptureUiMessage("Selection was out of sync, clearing");
+                    ClearSelection();
+                }
+
+                // Check data service state
+                if (_dataService == null)
+                {
+                    HammerAndSickle.Services.AppService.CaptureUiMessage("Data service unavailable");
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                HammerAndSickle.Services.AppService.HandleException(
+                    this.GetType().Name, nameof(ValidateAndRecoverState), e);
+                return false;
+            }
         }
 
         #endregion

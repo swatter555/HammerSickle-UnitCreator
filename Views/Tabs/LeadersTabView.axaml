@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="using:HammerSickle.UnitCreator.Views.Controls"
              xmlns:vm="using:HammerSickle.UnitCreator.ViewModels.Tabs"
+             xmlns:converters="using:HammerSickle.UnitCreator.Converters"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="HammerSickle.UnitCreator.Views.Tabs.LeadersTabView"
              x:DataType="vm:LeadersTabViewModel">
@@ -11,6 +12,227 @@
 	<Design.DataContext>
 		<vm:LeadersTabViewModel/>
 	</Design.DataContext>
+
+	<UserControl.Resources>
+		<!-- Leader Detail Template -->
+		<DataTemplate x:Key="LeaderDetailTemplate">
+			<ScrollViewer>
+				<StackPanel Spacing="16" Margin="16">
+
+					<!-- Basic Information -->
+					<Border Classes="section-card">
+						<StackPanel>
+							<TextBlock Text="Basic Information" Classes="section-header"/>
+
+							<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" Spacing="8">
+								<!-- Name -->
+								<TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Classes="field-label"/>
+								<TextBox Grid.Row="0" Grid.Column="1"
+								         Text="{Binding Name}"
+								         Watermark="Enter leader name"/>
+
+								<!-- Leader ID (Read-only) -->
+								<TextBlock Grid.Row="1" Grid.Column="0" Text="Leader ID:" Classes="field-label"/>
+								<TextBox Grid.Row="1" Grid.Column="1"
+								         Text="{Binding LeaderID}"
+								         IsReadOnly="True"
+								         Classes="readonly"/>
+
+								<!-- Side -->
+								<TextBlock Grid.Row="2" Grid.Column="0" Text="Side:" Classes="field-label"/>
+								<ComboBox Grid.Row="2" Grid.Column="1"
+								          SelectedItem="{Binding Side}">
+									<ComboBoxItem Content="Player" Tag="Player"/>
+									<ComboBoxItem Content="AI" Tag="AI"/>
+								</ComboBox>
+
+								<!-- Nationality -->
+								<TextBlock Grid.Row="3" Grid.Column="0" Text="Nationality:" Classes="field-label"/>
+								<ComboBox Grid.Row="3" Grid.Column="1"
+								          SelectedItem="{Binding Nationality}">
+									<ComboBoxItem Content="USSR" Tag="USSR"/>
+									<ComboBoxItem Content="USA" Tag="USA"/>
+									<ComboBoxItem Content="FRG" Tag="FRG"/>
+									<ComboBoxItem Content="FRA" Tag="FRA"/>
+									<ComboBoxItem Content="UK" Tag="UK"/>
+									<ComboBoxItem Content="IQ" Tag="IQ"/>
+									<ComboBoxItem Content="IR" Tag="IR"/>
+									<ComboBoxItem Content="SAUD" Tag="SAUD"/>
+									<ComboBoxItem Content="MJ" Tag="MJ"/>
+								</ComboBox>
+							</Grid>
+						</StackPanel>
+					</Border>
+
+					<!-- Command Information -->
+					<Border Classes="section-card">
+						<StackPanel>
+							<TextBlock Text="Command Information" Classes="section-header"/>
+
+							<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" Spacing="8">
+								<!-- Command Grade -->
+								<TextBlock Grid.Row="0" Grid.Column="0" Text="Command Grade:" Classes="field-label"/>
+								<ComboBox Grid.Row="0" Grid.Column="1"
+								          SelectedItem="{Binding CommandGrade}">
+									<ComboBoxItem Content="Junior Grade" Tag="JuniorGrade"/>
+									<ComboBoxItem Content="Senior Grade" Tag="SeniorGrade"/>
+									<ComboBoxItem Content="Top Grade" Tag="TopGrade"/>
+								</ComboBox>
+
+								<!-- Formatted Rank (Read-only) -->
+								<TextBlock Grid.Row="1" Grid.Column="0" Text="Rank:" Classes="field-label"/>
+								<TextBox Grid.Row="1" Grid.Column="1"
+								         Text="{Binding FormattedRank}"
+								         IsReadOnly="True"
+								         Classes="readonly"/>
+
+								<!-- Combat Command -->
+								<TextBlock Grid.Row="2" Grid.Column="0" Text="Combat Command:" Classes="field-label"/>
+								<ComboBox Grid.Row="2" Grid.Column="1"
+								          SelectedItem="{Binding CombatCommand}">
+									<ComboBoxItem Content="Poor" Tag="Poor"/>
+									<ComboBoxItem Content="Below Average" Tag="BelowAverage"/>
+									<ComboBoxItem Content="Average" Tag="Average"/>
+									<ComboBoxItem Content="Above Average" Tag="AboveAverage"/>
+									<ComboBoxItem Content="Excellent" Tag="Excellent"/>
+								</ComboBox>
+
+								<!-- Reputation Points -->
+								<TextBlock Grid.Row="3" Grid.Column="0" Text="Reputation Points:" Classes="field-label"/>
+								<NumericUpDown Grid.Row="3" Grid.Column="1"
+								               Value="{Binding ReputationPoints}"
+								               Minimum="0"
+								               Maximum="10000"
+								               Increment="10"/>
+							</Grid>
+						</StackPanel>
+					</Border>
+
+					<!-- Assignment Status -->
+					<Border Classes="section-card">
+						<StackPanel>
+							<TextBlock Text="Assignment Status" Classes="section-header"/>
+
+							<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Spacing="8">
+								<!-- Is Assigned (Read-only) -->
+								<TextBlock Grid.Row="0" Grid.Column="0" Text="Assigned:" Classes="field-label"/>
+								<CheckBox Grid.Row="0" Grid.Column="1"
+								          IsChecked="{Binding IsAssigned}"
+								          IsEnabled="False"/>
+
+								<!-- Unit ID (Read-only) -->
+								<TextBlock Grid.Row="1" Grid.Column="0" Text="Assigned Unit:" Classes="field-label"/>
+								<TextBox Grid.Row="1" Grid.Column="1"
+								         Text="{Binding UnitID}"
+								         IsReadOnly="True"
+								         Classes="readonly"
+								         Watermark="No assignment"/>
+							</Grid>
+						</StackPanel>
+					</Border>
+
+					<!-- Skills Section (Placeholder) -->
+					<Border Classes="section-card">
+						<StackPanel>
+							<TextBlock Text="Skills &amp; Abilities" Classes="section-header"/>
+							<TextBlock Text="Skill tree editor will be implemented in a future phase"
+							           FontStyle="Italic"
+							           Foreground="#6C757D"
+							           Margin="0,8"/>
+
+							<!-- Skills summary can be added here later -->
+							<Border Background="#F8F9FA"
+							        BorderBrush="#DEE2E6"
+							        BorderThickness="1"
+							        CornerRadius="4"
+							        Padding="12">
+								<StackPanel>
+									<TextBlock Text="Skills Summary:" FontWeight="Medium" Margin="0,0,0,4"/>
+									<TextBlock Text="• Leadership Foundation skills available"
+									           FontSize="12" Margin="8,0"/>
+									<TextBlock Text="• Doctrine specialization pending"
+									           FontSize="12" Margin="8,0"/>
+									<TextBlock Text="• Advanced specializations locked"
+									           FontSize="12" Margin="8,0"/>
+								</StackPanel>
+							</Border>
+						</StackPanel>
+					</Border>
+
+				</StackPanel>
+			</ScrollViewer>
+		</DataTemplate>
+
+		<!-- Leader Master Item Template -->
+		<DataTemplate x:Key="LeaderMasterItemTemplate">
+			<DockPanel>
+				<!-- Leader Status Indicator -->
+				<Ellipse DockPanel.Dock="Left"
+				         Width="10" Height="10"
+				         Margin="0,0,8,0"
+				         VerticalAlignment="Center">
+					<Ellipse.Fill>
+						<SolidColorBrush>
+							<SolidColorBrush.Color>
+								<MultiBinding Converter="{x:Static converters:LeaderStatusToColorConverter.Instance}">
+									<Binding Path="IsAssigned"/>
+									<Binding Path="CommandGrade"/>
+								</MultiBinding>
+							</SolidColorBrush.Color>
+						</SolidColorBrush>
+					</Ellipse.Fill>
+				</Ellipse>
+
+				<!-- Leader Content -->
+				<StackPanel Orientation="Vertical">
+					<!-- Leader Name and Rank -->
+					<DockPanel>
+						<TextBlock DockPanel.Dock="Left"
+						           Text="{Binding Name}"
+						           FontWeight="Medium"
+						           FontSize="13"
+						           TextTrimming="CharacterEllipsis"/>
+						<TextBlock DockPanel.Dock="Right"
+						           Text="{Binding FormattedRank}"
+						           FontSize="11"
+						           Foreground="#6C757D"
+						           HorizontalAlignment="Right"/>
+					</DockPanel>
+
+					<!-- Nationality and Assignment Status -->
+					<DockPanel>
+						<TextBlock DockPanel.Dock="Left"
+						           Text="{Binding Nationality}"
+						           FontSize="11"
+						           Foreground="#6C757D"/>
+						<StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+							<TextBlock Text="{Binding ReputationPoints, StringFormat='{}{0} REP'}"
+							           FontSize="10"
+							           Foreground="#28A745"
+							           FontWeight="Medium"/>
+							<TextBlock Text="•" FontSize="10" Foreground="#DEE2E6"/>
+							<TextBlock FontSize="10" FontWeight="Medium">
+								<TextBlock.Text>
+									<MultiBinding StringFormat="{}{0}">
+										<Binding Path="IsAssigned" Converter="{x:Static converters:BooleanToAssignmentTextConverter.Instance}"/>
+									</MultiBinding>
+								</TextBlock.Text>
+								<TextBlock.Foreground>
+									<SolidColorBrush>
+										<SolidColorBrush.Color>
+											<MultiBinding Converter="{x:Static converters:BooleanToAssignmentColorConverter.Instance}">
+												<Binding Path="IsAssigned"/>
+											</MultiBinding>
+										</SolidColorBrush.Color>
+									</SolidColorBrush>
+								</TextBlock.Foreground>
+							</TextBlock>
+						</StackPanel>
+					</DockPanel>
+				</StackPanel>
+			</DockPanel>
+		</DataTemplate>
+	</UserControl.Resources>
 
 	<DockPanel>
 		<!-- Advanced Filters Panel (Collapsible) -->
@@ -99,158 +321,34 @@
 			</DockPanel>
 		</Border>
 
-		<!-- Master-Detail Control -->
-		<controls:MasterDetailControl DataContext="{Binding}">
-			<controls:MasterDetailControl.DetailTemplate>
-				<DataTemplate>
-					<ScrollViewer>
-						<StackPanel Spacing="16" Margin="16">
-
-							<!-- Basic Information -->
-							<Border Classes="section-card">
-								<StackPanel>
-									<TextBlock Text="Basic Information" Classes="section-header"/>
-
-									<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" Spacing="8">
-										<!-- Name -->
-										<TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Classes="field-label"/>
-										<TextBox Grid.Row="0" Grid.Column="1"
-										         Text="{Binding Name}"
-										         Watermark="Enter leader name"/>
-
-										<!-- Leader ID (Read-only) -->
-										<TextBlock Grid.Row="1" Grid.Column="0" Text="Leader ID:" Classes="field-label"/>
-										<TextBox Grid.Row="1" Grid.Column="1"
-										         Text="{Binding LeaderID}"
-										         IsReadOnly="True"
-										         Classes="readonly"/>
-
-										<!-- Side -->
-										<TextBlock Grid.Row="2" Grid.Column="0" Text="Side:" Classes="field-label"/>
-										<ComboBox Grid.Row="2" Grid.Column="1"
-										          SelectedItem="{Binding Side}">
-											<ComboBoxItem Content="Player" Tag="Player"/>
-											<ComboBoxItem Content="AI" Tag="AI"/>
-										</ComboBox>
-
-										<!-- Nationality -->
-										<TextBlock Grid.Row="3" Grid.Column="0" Text="Nationality:" Classes="field-label"/>
-										<ComboBox Grid.Row="3" Grid.Column="1"
-										          SelectedItem="{Binding Nationality}">
-											<ComboBoxItem Content="USSR" Tag="USSR"/>
-											<ComboBoxItem Content="USA" Tag="USA"/>
-											<ComboBoxItem Content="FRG" Tag="FRG"/>
-											<ComboBoxItem Content="FRA" Tag="FRA"/>
-											<ComboBoxItem Content="UK" Tag="UK"/>
-											<ComboBoxItem Content="IQ" Tag="IQ"/>
-											<ComboBoxItem Content="IR" Tag="IR"/>
-											<ComboBoxItem Content="SAUD" Tag="SAUD"/>
-											<ComboBoxItem Content="MJ" Tag="MJ"/>
-										</ComboBox>
-									</Grid>
-								</StackPanel>
-							</Border>
-
-							<!-- Command Information -->
-							<Border Classes="section-card">
-								<StackPanel>
-									<TextBlock Text="Command Information" Classes="section-header"/>
-
-									<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" Spacing="8">
-										<!-- Command Grade -->
-										<TextBlock Grid.Row="0" Grid.Column="0" Text="Command Grade:" Classes="field-label"/>
-										<ComboBox Grid.Row="0" Grid.Column="1"
-										          SelectedItem="{Binding CommandGrade}">
-											<ComboBoxItem Content="Junior Grade" Tag="JuniorGrade"/>
-											<ComboBoxItem Content="Senior Grade" Tag="SeniorGrade"/>
-											<ComboBoxItem Content="Top Grade" Tag="TopGrade"/>
-										</ComboBox>
-
-										<!-- Formatted Rank (Read-only) -->
-										<TextBlock Grid.Row="1" Grid.Column="0" Text="Rank:" Classes="field-label"/>
-										<TextBox Grid.Row="1" Grid.Column="1"
-										         Text="{Binding FormattedRank}"
-										         IsReadOnly="True"
-										         Classes="readonly"/>
-
-										<!-- Combat Command -->
-										<TextBlock Grid.Row="2" Grid.Column="0" Text="Combat Command:" Classes="field-label"/>
-										<ComboBox Grid.Row="2" Grid.Column="1"
-										          SelectedItem="{Binding CombatCommand}">
-											<ComboBoxItem Content="Poor" Tag="Poor"/>
-											<ComboBoxItem Content="Below Average" Tag="BelowAverage"/>
-											<ComboBoxItem Content="Average" Tag="Average"/>
-											<ComboBoxItem Content="Above Average" Tag="AboveAverage"/>
-											<ComboBoxItem Content="Excellent" Tag="Excellent"/>
-										</ComboBox>
-
-										<!-- Reputation Points -->
-										<TextBlock Grid.Row="3" Grid.Column="0" Text="Reputation Points:" Classes="field-label"/>
-										<NumericUpDown Grid.Row="3" Grid.Column="1"
-										               Value="{Binding ReputationPoints}"
-										               Minimum="0"
-										               Maximum="10000"
-										               Increment="10"/>
-									</Grid>
-								</StackPanel>
-							</Border>
-
-							<!-- Assignment Status -->
-							<Border Classes="section-card">
-								<StackPanel>
-									<TextBlock Text="Assignment Status" Classes="section-header"/>
-
-									<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Spacing="8">
-										<!-- Is Assigned (Read-only) -->
-										<TextBlock Grid.Row="0" Grid.Column="0" Text="Assigned:" Classes="field-label"/>
-										<CheckBox Grid.Row="0" Grid.Column="1"
-										          IsChecked="{Binding IsAssigned}"
-										          IsEnabled="False"/>
-
-										<!-- Unit ID (Read-only) -->
-										<TextBlock Grid.Row="1" Grid.Column="0" Text="Assigned Unit:" Classes="field-label"/>
-										<TextBox Grid.Row="1" Grid.Column="1"
-										         Text="{Binding UnitID}"
-										         IsReadOnly="True"
-										         Classes="readonly"
-										         Watermark="No assignment"/>
-									</Grid>
-								</StackPanel>
-							</Border>
-
-							<!-- Skills Section (Placeholder) -->
-							<Border Classes="section-card">
-								<StackPanel>
-									<TextBlock Text="Skills &amp; Abilities" Classes="section-header"/>
-									<TextBlock Text="Skill tree editor will be implemented in a future phase"
-									           FontStyle="Italic"
-									           Foreground="#6C757D"
-									           Margin="0,8"/>
-
-									<!-- Skills summary can be added here later -->
-									<Border Background="#F8F9FA"
-									        BorderBrush="#DEE2E6"
-									        BorderThickness="1"
-									        CornerRadius="4"
-									        Padding="12">
-										<StackPanel>
-											<TextBlock Text="Skills Summary:" FontWeight="Medium" Margin="0,0,0,4"/>
-											<TextBlock Text="• Leadership Foundation skills available"
-											           FontSize="12" Margin="8,0"/>
-											<TextBlock Text="• Doctrine specialization pending"
-											           FontSize="12" Margin="8,0"/>
-											<TextBlock Text="• Advanced specializations locked"
-											           FontSize="12" Margin="8,0"/>
-										</StackPanel>
-									</Border>
-								</StackPanel>
-							</Border>
-
-						</StackPanel>
-					</ScrollViewer>
-				</DataTemplate>
-			</controls:MasterDetailControl.DetailTemplate>
-		</controls:MasterDetailControl>
+		<!-- Master-Detail Control with Property Configuration -->
+		<controls:MasterDetailControl
+			ItemsSource="{Binding Items}"
+			SelectedItem="{Binding SelectedItem}"
+			AddCommand="{Binding AddCommand}"
+			DeleteCommand="{Binding DeleteCommand}"
+			CloneCommand="{Binding CloneCommand}"
+			RefreshCommand="{Binding RefreshCommand}"
+			HideValidationSummaryCommand="{Binding HideValidationSummaryCommand}"
+			CanDelete="{Binding CanDelete}"
+			CanClone="{Binding CanClone}"
+			FilterText="{Binding FilterText}"
+			FilterWatermark="{Binding FilterWatermark}"
+			DetailTitle="{Binding DetailTitle}"
+			NoSelectionMessage="{Binding NoSelectionMessage}"
+			AddButtonText="{Binding AddButtonText}"
+			AddToolTip="{Binding AddToolTip}"
+			DeleteToolTip="{Binding DeleteToolTip}"
+			CloneToolTip="{Binding CloneToolTip}"
+			ItemsCountText="{Binding ItemsCountText}"
+			SelectionText="{Binding SelectionText}"
+			IsSelectedItemValid="{Binding IsSelectedItemValid}"
+			IsSelectedItemModified="{Binding IsSelectedItemModified}"
+			ValidationStatusText="{Binding ValidationStatusText}"
+			ShowValidationSummary="{Binding ShowValidationSummary}"
+			ValidationSummaryItems="{Binding ValidationSummaryItems}"
+			MasterItemTemplate="{StaticResource LeaderMasterItemTemplate}"
+			DetailTemplate="{StaticResource LeaderDetailTemplate}"/>
 	</DockPanel>
 
 	<!-- Define custom styles -->
