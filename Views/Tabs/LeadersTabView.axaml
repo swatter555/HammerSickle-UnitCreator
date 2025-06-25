@@ -24,7 +24,7 @@
 						<StackPanel>
 							<TextBlock Text="Basic Information" Classes="section-header"/>
 
-							<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" Spacing="8">
+							<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto">
 								<!-- Name -->
 								<TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Classes="field-label"/>
 								<TextBox Grid.Row="0" Grid.Column="1"
@@ -69,7 +69,7 @@
 						<StackPanel>
 							<TextBlock Text="Command Information" Classes="section-header"/>
 
-							<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto" Spacing="8">
+							<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto">
 								<!-- Command Grade -->
 								<TextBlock Grid.Row="0" Grid.Column="0" Text="Command Grade:" Classes="field-label"/>
 								<ComboBox Grid.Row="0" Grid.Column="1"
@@ -113,7 +113,7 @@
 						<StackPanel>
 							<TextBlock Text="Assignment Status" Classes="section-header"/>
 
-							<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Spacing="8">
+							<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
 								<!-- Is Assigned (Read-only) -->
 								<TextBlock Grid.Row="0" Grid.Column="0" Text="Assigned:" Classes="field-label"/>
 								<CheckBox Grid.Row="0" Grid.Column="1"
@@ -220,8 +220,9 @@
 								<TextBlock.Foreground>
 									<SolidColorBrush>
 										<SolidColorBrush.Color>
-											<MultiBinding Converter="{x:Static converters:BooleanToAssignmentColorConverter.Instance}">
+											<MultiBinding Converter="{x:Static converters:LeaderStatusToColorConverter.Instance}">
 												<Binding Path="IsAssigned"/>
+												<Binding Path="CommandGrade"/>
 											</MultiBinding>
 										</SolidColorBrush.Color>
 									</SolidColorBrush>
