@@ -77,7 +77,7 @@ namespace HammerSickle.UnitCreator.ViewModels
 
         private void OnExport()
         {
-            StatusMessage = "Export to .sce - not implemented yet";
+            StatusMessage = "Export to .oob - not implemented yet";
         }
 
         private void OnExit()

@@ -293,48 +293,50 @@
 			</Border>
 
 			<!-- Detail Content Area -->
-			<ScrollViewer DockPanel.Dock="Fill"
-			              HorizontalScrollBarVisibility="Auto"
-			              VerticalScrollBarVisibility="Auto"
-			              Padding="16">
+			<ScrollViewer HorizontalScrollBarVisibility="Auto"
+						  VerticalScrollBarVisibility="Auto"
+						  Padding="16">
 
-				<!-- No Selection State -->
-				<Panel IsVisible="{Binding !SelectedItem}">
-					<StackPanel HorizontalAlignment="Center"
-					            VerticalAlignment="Center"
-					            Spacing="16">
-						<TextBlock Text="📝"
-						           FontSize="48"
-						           HorizontalAlignment="Center"
-						           Opacity="0.3"/>
-						<TextBlock Text="{Binding NoSelectionMessage, FallbackValue='Select an item to view details'}"
-						           FontSize="14"
-						           Foreground="#6C757D"
-						           HorizontalAlignment="Center"/>
-						<Button Content="{Binding AddButtonText, FallbackValue='Add New Item'}"
-						        Command="{Binding AddCommand}"
-						        Classes="primary"
-						        HorizontalAlignment="Center"
-						        Padding="16,8">
-							<Button.Styles>
-								<Style Selector="Button.primary">
-									<Setter Property="Background" Value="#007BFF"/>
-									<Setter Property="Foreground" Value="White"/>
-									<Setter Property="BorderBrush" Value="#007BFF"/>
-								</Style>
-								<Style Selector="Button.primary:pointerover">
-									<Setter Property="Background" Value="#0056B3"/>
-									<Setter Property="BorderBrush" Value="#004085"/>
-								</Style>
-							</Button.Styles>
-						</Button>
-					</StackPanel>
+				<!-- Single wrapper Panel to contain both states -->
+				<Panel>
+					<!-- No Selection State -->
+					<Panel IsVisible="{Binding !SelectedItem}">
+						<StackPanel HorizontalAlignment="Center"
+									VerticalAlignment="Center"
+									Spacing="16">
+							<TextBlock Text="📝"
+									   FontSize="48"
+									   HorizontalAlignment="Center"
+									   Opacity="0.3"/>
+							<TextBlock Text="{Binding NoSelectionMessage, FallbackValue='Select an item to view details'}"
+									   FontSize="14"
+									   Foreground="#6C757D"
+									   HorizontalAlignment="Center"/>
+							<Button Content="{Binding AddButtonText, FallbackValue='Add New Item'}"
+									Command="{Binding AddCommand}"
+									Classes="primary"
+									HorizontalAlignment="Center"
+									Padding="16,8">
+								<Button.Styles>
+									<Style Selector="Button.primary">
+										<Setter Property="Background" Value="#007BFF"/>
+										<Setter Property="Foreground" Value="White"/>
+										<Setter Property="BorderBrush" Value="#007BFF"/>
+									</Style>
+									<Style Selector="Button.primary:pointerover">
+										<Setter Property="Background" Value="#0056B3"/>
+										<Setter Property="BorderBrush" Value="#004085"/>
+									</Style>
+								</Button.Styles>
+							</Button>
+						</StackPanel>
+					</Panel>
+
+					<!-- Detail Editor Content -->
+					<ContentPresenter Content="{Binding SelectedItem}"
+									  ContentTemplate="{Binding DetailTemplate}"
+									  IsVisible="{Binding !!SelectedItem}"/>
 				</Panel>
-
-				<!-- Detail Editor Content -->
-				<ContentPresenter Content="{Binding SelectedItem}"
-				                  ContentTemplate="{Binding DetailTemplate}"
-				                  IsVisible="{Binding !!SelectedItem}"/>
 			</ScrollViewer>
 		</DockPanel>
 
@@ -366,7 +368,7 @@
 					           FontWeight="Medium"
 					           FontSize="12"
 					           Foreground="#856404"/>
-					<ItemsControl Items="{Binding ValidationSummaryItems}">
+					<ItemsControl ItemsSource="{Binding ValidationSummaryItems}">
 						<ItemsControl.ItemTemplate>
 							<DataTemplate>
 								<TextBlock Text="{Binding}"

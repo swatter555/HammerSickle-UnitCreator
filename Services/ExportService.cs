@@ -28,7 +28,7 @@ namespace HammerSickle.UnitCreator.Services
 
         // File extensions and paths
         private const string PROJECT_EXTENSION = ".sce";  // GameDataManager uses unified .sce format
-        private const string SCENARIO_EXTENSION = ".sce"; // Same format for both project and scenario files
+        private const string SCENARIO_EXTENSION = ".oob"; // Format for both project and scenario files
         private const string BACKUP_EXTENSION = ".bak";
 
         // Default directories
@@ -236,7 +236,7 @@ namespace HammerSickle.UnitCreator.Services
         #region Scenario Export Operations
 
         /// <summary>
-        /// Exports current data to .sce format for scenario editor import
+        /// Exports current data to .oob format for scenario editor import
         /// </summary>
         public async Task<bool> ExportScenarioAsync(string filePath)
         {
@@ -248,7 +248,7 @@ namespace HammerSickle.UnitCreator.Services
 
             try
             {
-                // Ensure .sce extension
+                // Ensure .oob extension
                 if (!filePath.EndsWith(SCENARIO_EXTENSION, StringComparison.OrdinalIgnoreCase))
                 {
                     filePath += SCENARIO_EXTENSION;
@@ -571,7 +571,7 @@ namespace HammerSickle.UnitCreator.Services
                 return $"Units: {counts.CombatUnits}, Leaders: {counts.Leaders}, " +
                        $"Weapon Profiles: {counts.WeaponProfiles}, Unit Profiles: {counts.UnitProfiles} " +
                        $"(Errors: {validationResult.Errors.Count}, Warnings: {validationResult.Warnings.Count}) " +
-                       $"[Format: .sce unified]";
+                       $"[Format: .oob export]";
             }
             catch (Exception e)
             {

@@ -6,6 +6,7 @@ using System.Reactive.Linq;
 using Avalonia.Controls.Templates;
 using ReactiveUI;
 using HammerSickle.UnitCreator.Services;
+using ValidationResult = HammerSickle.UnitCreator.Services.ValidationResult;
 
 namespace HammerSickle.UnitCreator.ViewModels.Base
 {
@@ -31,14 +32,14 @@ namespace HammerSickle.UnitCreator.ViewModels.Base
             Items = new ObservableCollection<object>();
             ValidationSummaryItems = new ObservableCollection<string>();
 
-            // Initialize commands with proper ReactiveCommand types
+            // Initialize commands with lambda expressions to fix method group conversion errors
             AddCommand = ReactiveCommand.Create(ExecuteAdd);
 
             var canDelete = this.WhenAnyValue(x => x.SelectedItem).Select(item => item != null);
-            DeleteCommand = ReactiveCommand.Create<object?>(ExecuteDelete, canDelete);
+            DeleteCommand = ReactiveCommand.Create<object?>(item => ExecuteDelete(item), canDelete);
 
             var canClone = this.WhenAnyValue(x => x.SelectedItem).Select(item => item != null);
-            CloneCommand = ReactiveCommand.Create<object?>(ExecuteClone, canClone);
+            CloneCommand = ReactiveCommand.Create<object?>(item => ExecuteClone(item), canClone);
 
             RefreshCommand = ReactiveCommand.Create(ExecuteRefresh);
             HideValidationSummaryCommand = ReactiveCommand.Create(ExecuteHideValidationSummary);
@@ -295,24 +296,6 @@ namespace HammerSickle.UnitCreator.ViewModels.Base
             SelectedItem = null;
             ShowValidationSummary = false;
             ValidationSummaryItems.Clear();
-        }
-
-        #endregion
-
-        #region Cleanup
-
-        /// <summary>
-        /// Performs cleanup when the ViewModel is disposed
-        /// </summary>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                Items.Clear();
-                ValidationSummaryItems.Clear();
-                ClearSelection();
-            }
-            base.Dispose(disposing);
         }
 
         #endregion
