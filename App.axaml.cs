@@ -17,14 +17,14 @@ namespace HammerSickle.UnitCreator
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                desktop.MainWindow = new MainWindow
-                {
-                    DataContext = new MainWindowViewModel(),
-                };
+                var mainWindow = new MainWindow();
+                var mainViewModel = new MainWindowViewModel();
+                mainWindow.DataContext = mainViewModel;
+
+                desktop.MainWindow = mainWindow;
             }
 
             base.OnFrameworkInitializationCompleted();
         }
-
     }
 }

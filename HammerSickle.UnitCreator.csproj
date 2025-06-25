@@ -27,6 +27,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Converters\" />
+	  <Folder Include="Utilities\" />
 	</ItemGroup>
 
 </Project>
