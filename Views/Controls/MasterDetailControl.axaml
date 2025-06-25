@@ -1,0 +1,384 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="600"
+             x:Class="HammerSickle.UnitCreator.Views.Controls.MasterDetailControl"
+             x:Name="MasterDetailControlRoot">
+
+	<Design.DataContext>
+		<x:Null/>
+	</Design.DataContext>
+
+	<Grid ColumnDefinitions="350,5,*">
+
+		<!-- Master Panel (Left Side) -->
+		<DockPanel Grid.Column="0" Background="#F8F9FA">
+
+			<!-- Master Toolbar -->
+			<Border DockPanel.Dock="Top"
+			        Background="#E9ECEF"
+			        BorderBrush="#DEE2E6"
+			        BorderThickness="0,0,0,1"
+			        Padding="8,6">
+				<StackPanel Orientation="Horizontal" Spacing="6">
+
+					<!-- Add Button -->
+					<Button Content="Add"
+					        Command="{Binding AddCommand}"
+					        ToolTip.Tip="{Binding AddToolTip, FallbackValue='Add new item'}"
+					        Classes="success"
+					        Padding="12,4"
+					        MinWidth="60">
+						<Button.Styles>
+							<Style Selector="Button.success">
+								<Setter Property="Background" Value="#28A745"/>
+								<Setter Property="Foreground" Value="White"/>
+								<Setter Property="BorderBrush" Value="#28A745"/>
+							</Style>
+							<Style Selector="Button.success:pointerover">
+								<Setter Property="Background" Value="#218838"/>
+								<Setter Property="BorderBrush" Value="#1E7E34"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+
+					<!-- Delete Button -->
+					<Button Content="Delete"
+					        Command="{Binding DeleteCommand}"
+					        CommandParameter="{Binding SelectedItem}"
+					        ToolTip.Tip="{Binding DeleteToolTip, FallbackValue='Delete selected item'}"
+					        Classes="danger"
+					        Padding="12,4"
+					        MinWidth="60"
+					        IsEnabled="{Binding CanDelete}">
+						<Button.Styles>
+							<Style Selector="Button.danger">
+								<Setter Property="Background" Value="#DC3545"/>
+								<Setter Property="Foreground" Value="White"/>
+								<Setter Property="BorderBrush" Value="#DC3545"/>
+							</Style>
+							<Style Selector="Button.danger:pointerover">
+								<Setter Property="Background" Value="#C82333"/>
+								<Setter Property="BorderBrush" Value="#BD2130"/>
+							</Style>
+							<Style Selector="Button.danger:disabled">
+								<Setter Property="Background" Value="#6C757D"/>
+								<Setter Property="BorderBrush" Value="#6C757D"/>
+								<Setter Property="Opacity" Value="0.65"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+
+					<!-- Clone Button -->
+					<Button Content="Clone"
+					        Command="{Binding CloneCommand}"
+					        CommandParameter="{Binding SelectedItem}"
+					        ToolTip.Tip="{Binding CloneToolTip, FallbackValue='Clone selected item'}"
+					        Classes="secondary"
+					        Padding="12,4"
+					        MinWidth="60"
+					        IsEnabled="{Binding CanClone}">
+						<Button.Styles>
+							<Style Selector="Button.secondary">
+								<Setter Property="Background" Value="#6C757D"/>
+								<Setter Property="Foreground" Value="White"/>
+								<Setter Property="BorderBrush" Value="#6C757D"/>
+							</Style>
+							<Style Selector="Button.secondary:pointerover">
+								<Setter Property="Background" Value="#545B62"/>
+								<Setter Property="BorderBrush" Value="#4E555B"/>
+							</Style>
+							<Style Selector="Button.secondary:disabled">
+								<Setter Property="Background" Value="#ADB5BD"/>
+								<Setter Property="BorderBrush" Value="#ADB5BD"/>
+								<Setter Property="Opacity" Value="0.65"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+
+					<!-- Refresh Button -->
+					<Button Content="↻"
+					        Command="{Binding RefreshCommand}"
+					        ToolTip.Tip="Refresh list"
+					        Classes="outline"
+					        Padding="8,4"
+					        MinWidth="32"
+					        FontSize="14">
+						<Button.Styles>
+							<Style Selector="Button.outline">
+								<Setter Property="Background" Value="Transparent"/>
+								<Setter Property="Foreground" Value="#495057"/>
+								<Setter Property="BorderBrush" Value="#CED4DA"/>
+							</Style>
+							<Style Selector="Button.outline:pointerover">
+								<Setter Property="Background" Value="#F8F9FA"/>
+								<Setter Property="BorderBrush" Value="#ADB5BD"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+				</StackPanel>
+			</Border>
+
+			<!-- Search/Filter Bar -->
+			<Border DockPanel.Dock="Top"
+			        Background="White"
+			        BorderBrush="#DEE2E6"
+			        BorderThickness="0,0,0,1"
+			        Padding="8,6">
+				<DockPanel>
+					<TextBlock DockPanel.Dock="Left"
+					           Text="Filter:"
+					           VerticalAlignment="Center"
+					           Margin="0,0,6,0"
+					           FontWeight="Medium"/>
+					<TextBox Text="{Binding FilterText}"
+					         Watermark="{Binding FilterWatermark, FallbackValue='Type to filter...'}"
+					         VerticalAlignment="Center"/>
+				</DockPanel>
+			</Border>
+
+			<!-- Items Count Display -->
+			<Border DockPanel.Dock="Bottom"
+			        Background="#F8F9FA"
+			        BorderBrush="#DEE2E6"
+			        BorderThickness="0,1,0,0"
+			        Padding="8,4">
+				<DockPanel>
+					<TextBlock DockPanel.Dock="Left"
+					           Text="{Binding ItemsCountText, FallbackValue='0 items'}"
+					           FontSize="11"
+					           Foreground="#6C757D"/>
+					<TextBlock DockPanel.Dock="Right"
+					           Text="{Binding SelectionText}"
+					           FontSize="11"
+					           Foreground="#6C757D"
+					           HorizontalAlignment="Right"/>
+				</DockPanel>
+			</Border>
+
+			<!-- Master List -->
+			<ListBox ItemsSource="{Binding Items}"
+			         SelectedItem="{Binding SelectedItem}"
+			         Background="White"
+			         BorderBrush="#DEE2E6"
+			         BorderThickness="0"
+			         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+				<ListBox.Styles>
+					<Style Selector="ListBoxItem">
+						<Setter Property="Padding" Value="12,8"/>
+						<Setter Property="BorderThickness" Value="0,0,0,1"/>
+						<Setter Property="BorderBrush" Value="#F1F3F4"/>
+					</Style>
+					<Style Selector="ListBoxItem:selected">
+						<Setter Property="Background" Value="#E3F2FD"/>
+						<Setter Property="BorderBrush" Value="#2196F3"/>
+					</Style>
+					<Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+						<Setter Property="Foreground" Value="#1976D2"/>
+					</Style>
+				</ListBox.Styles>
+
+				<ListBox.ItemTemplate>
+					<DataTemplate>
+						<DockPanel>
+							<!-- Status Indicator -->
+							<Ellipse DockPanel.Dock="Left"
+							         Width="8" Height="8"
+							         Margin="0,0,8,0"
+							         VerticalAlignment="Center"
+							         Fill="#28A745"/>
+
+							<!-- Main Content -->
+							<StackPanel Orientation="Vertical">
+								<!-- Primary Text -->
+								<TextBlock Text="{Binding DisplayName, FallbackValue='Unnamed Item'}"
+								           FontWeight="Medium"
+								           FontSize="13"
+								           TextTrimming="CharacterEllipsis"/>
+
+								<!-- Secondary Text -->
+								<TextBlock Text="{Binding DisplaySubtext}"
+								           FontSize="11"
+								           Foreground="#6C757D"
+								           TextTrimming="CharacterEllipsis"/>
+							</StackPanel>
+						</DockPanel>
+					</DataTemplate>
+				</ListBox.ItemTemplate>
+			</ListBox>
+		</DockPanel>
+
+		<!-- Splitter -->
+		<GridSplitter Grid.Column="1"
+		              Width="5"
+		              Background="#DEE2E6"
+		              ResizeDirection="Columns"/>
+
+		<!-- Detail Panel (Right Side) -->
+		<DockPanel Grid.Column="2" Background="White">
+
+			<!-- Detail Header -->
+			<Border DockPanel.Dock="Top"
+			        Background="#F8F9FA"
+			        BorderBrush="#DEE2E6"
+			        BorderThickness="0,0,0,1"
+			        Padding="16,12">
+				<DockPanel>
+					<!-- Title -->
+					<TextBlock DockPanel.Dock="Left"
+					           Text="{Binding DetailTitle, FallbackValue='Item Details'}"
+					           FontSize="16"
+					           FontWeight="SemiBold"
+					           VerticalAlignment="Center"/>
+
+					<!-- Status badges -->
+					<StackPanel DockPanel.Dock="Right"
+					            Orientation="Horizontal"
+					            Spacing="6"
+					            VerticalAlignment="Center">
+
+						<!-- Validation Status Badge -->
+						<Border Classes="badge"
+						        Classes.success="{Binding IsSelectedItemValid}"
+						        Classes.danger="{Binding !IsSelectedItemValid}"
+						        IsVisible="{Binding !!SelectedItem}">
+							<TextBlock Text="{Binding ValidationStatusText, FallbackValue='Valid'}"
+							           FontSize="10"
+							           FontWeight="Medium"/>
+							<Border.Styles>
+								<Style Selector="Border.badge">
+									<Setter Property="CornerRadius" Value="3"/>
+									<Setter Property="Padding" Value="6,2"/>
+								</Style>
+								<Style Selector="Border.badge.success">
+									<Setter Property="Background" Value="#D4EDDA"/>
+									<Setter Property="BorderBrush" Value="#C3E6CB"/>
+									<Setter Property="BorderThickness" Value="1"/>
+								</Style>
+								<Style Selector="Border.badge.success TextBlock">
+									<Setter Property="Foreground" Value="#155724"/>
+								</Style>
+								<Style Selector="Border.badge.danger">
+									<Setter Property="Background" Value="#F8D7DA"/>
+									<Setter Property="BorderBrush" Value="#F5C6CB"/>
+									<Setter Property="BorderThickness" Value="1"/>
+								</Style>
+								<Style Selector="Border.badge.danger TextBlock">
+									<Setter Property="Foreground" Value="#721C24"/>
+								</Style>
+							</Border.Styles>
+						</Border>
+
+						<!-- Modified Status Badge -->
+						<Border Classes="badge warning"
+						        IsVisible="{Binding IsSelectedItemModified}">
+							<TextBlock Text="Modified"
+							           FontSize="10"
+							           FontWeight="Medium"
+							           Foreground="#856404"/>
+							<Border.Styles>
+								<Style Selector="Border.badge.warning">
+									<Setter Property="Background" Value="#FFF3CD"/>
+									<Setter Property="BorderBrush" Value="#FFEAA7"/>
+									<Setter Property="BorderThickness" Value="1"/>
+									<Setter Property="CornerRadius" Value="3"/>
+									<Setter Property="Padding" Value="6,2"/>
+								</Style>
+							</Border.Styles>
+						</Border>
+					</StackPanel>
+				</DockPanel>
+			</Border>
+
+			<!-- Detail Content Area -->
+			<ScrollViewer DockPanel.Dock="Fill"
+			              HorizontalScrollBarVisibility="Auto"
+			              VerticalScrollBarVisibility="Auto"
+			              Padding="16">
+
+				<!-- No Selection State -->
+				<Panel IsVisible="{Binding !SelectedItem}">
+					<StackPanel HorizontalAlignment="Center"
+					            VerticalAlignment="Center"
+					            Spacing="16">
+						<TextBlock Text="📝"
+						           FontSize="48"
+						           HorizontalAlignment="Center"
+						           Opacity="0.3"/>
+						<TextBlock Text="{Binding NoSelectionMessage, FallbackValue='Select an item to view details'}"
+						           FontSize="14"
+						           Foreground="#6C757D"
+						           HorizontalAlignment="Center"/>
+						<Button Content="{Binding AddButtonText, FallbackValue='Add New Item'}"
+						        Command="{Binding AddCommand}"
+						        Classes="primary"
+						        HorizontalAlignment="Center"
+						        Padding="16,8">
+							<Button.Styles>
+								<Style Selector="Button.primary">
+									<Setter Property="Background" Value="#007BFF"/>
+									<Setter Property="Foreground" Value="White"/>
+									<Setter Property="BorderBrush" Value="#007BFF"/>
+								</Style>
+								<Style Selector="Button.primary:pointerover">
+									<Setter Property="Background" Value="#0056B3"/>
+									<Setter Property="BorderBrush" Value="#004085"/>
+								</Style>
+							</Button.Styles>
+						</Button>
+					</StackPanel>
+				</Panel>
+
+				<!-- Detail Editor Content -->
+				<ContentPresenter Content="{Binding SelectedItem}"
+				                  ContentTemplate="{Binding DetailTemplate}"
+				                  IsVisible="{Binding !!SelectedItem}"/>
+			</ScrollViewer>
+		</DockPanel>
+
+		<!-- Validation Summary Overlay -->
+		<Border Grid.Column="2"
+		        Background="#FFF3CD"
+		        BorderBrush="#FFEAA7"
+		        BorderThickness="1"
+		        CornerRadius="4"
+		        Margin="16,16,16,0"
+		        Padding="12,8"
+		        VerticalAlignment="Top"
+		        IsVisible="{Binding ShowValidationSummary}">
+			<DockPanel>
+				<TextBlock DockPanel.Dock="Left"
+				           Text="⚠️"
+				           VerticalAlignment="Center"
+				           Margin="0,0,8,0"/>
+				<Button DockPanel.Dock="Right"
+				        Content="✕"
+				        Command="{Binding HideValidationSummaryCommand}"
+				        Background="Transparent"
+				        BorderThickness="0"
+				        Padding="4"
+				        VerticalAlignment="Top"
+				        FontSize="10"/>
+				<StackPanel>
+					<TextBlock Text="Validation Issues"
+					           FontWeight="Medium"
+					           FontSize="12"
+					           Foreground="#856404"/>
+					<ItemsControl Items="{Binding ValidationSummaryItems}">
+						<ItemsControl.ItemTemplate>
+							<DataTemplate>
+								<TextBlock Text="{Binding}"
+								           FontSize="11"
+								           Foreground="#856404"
+								           TextWrapping="Wrap"
+								           Margin="0,2,0,0"/>
+							</DataTemplate>
+						</ItemsControl.ItemTemplate>
+					</ItemsControl>
+				</StackPanel>
+			</DockPanel>
+		</Border>
+	</Grid>
+</UserControl>

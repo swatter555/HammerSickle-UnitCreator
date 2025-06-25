@@ -27,7 +27,6 @@
 
 	<ItemGroup>
 	  <Folder Include="Converters\" />
-	  <Folder Include="Views\Controls\" />
 	</ItemGroup>
 
 </Project>
