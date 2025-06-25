@@ -191,6 +191,23 @@ namespace HammerAndSickle.Models
         #region Constructors
 
         /// <summary>
+        /// Default constructor
+        /// </summary>
+        public Leader()
+        {
+            LeaderID = GenerateUniqueID();
+            Nationality = Nationality.USSR; // Default
+            Side = Side.Player; // Default side
+            Name = "Default Officer"; // Placeholder name
+            CommandGrade = CommandGrade.JuniorGrade; // Default command grade
+            ReputationPoints = 0; // Start with no reputation
+            IsAssigned = false; // Not assigned to any unit
+            UnitID = null; // No unit assigned
+
+            InitializeSkillTree();
+        }
+
+        /// <summary>
         /// Creates a new leader with random generation based on nationality
         /// </summary>
         /// <param name="side">Player or AI side</param>
@@ -528,6 +545,48 @@ namespace HammerAndSickle.Models
             catch (Exception e)
             {
                 AppService.HandleException(CLASS_NAME, "SetCommandGrade", e);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Sets the side of the object to the specified value.
+        /// </summary>
+        /// <param name="side">The side to set. Must be a valid value of the <see cref="Side"/> enumeration.</param>
+        public void SetSide(Side side)
+        {
+            try
+            {
+                if (!Enum.IsDefined(typeof(Side), side))
+                {
+                    throw new ArgumentException($"Invalid side: {side}");
+                }
+                Side = side;
+            }
+            catch (Exception e)
+            {
+                AppService.HandleException(CLASS_NAME, "SetSide", e);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Set the nationality of the officer.
+        /// </summary>
+        /// <param name="nationality"></param>
+        public void SetNationality(Nationality nationality)
+        {
+            try
+            {
+                if (!Enum.IsDefined(typeof(Nationality), nationality))
+                {
+                    throw new ArgumentException($"Invalid nationality: {nationality}");
+                }
+                Nationality = nationality;
+            }
+            catch (Exception e)
+            {
+                AppService.HandleException(CLASS_NAME, "SetNationality", e);
                 throw;
             }
         }

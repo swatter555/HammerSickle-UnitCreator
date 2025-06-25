@@ -6,6 +6,7 @@ using System.Reactive.Linq;
 using Avalonia.Controls.Templates;
 using ReactiveUI;
 using HammerAndSickle.Models;
+using HammerAndSickle.Services;
 using HammerSickle.UnitCreator.Services;
 using HammerSickle.UnitCreator.ViewModels.Base;
 
@@ -21,6 +22,7 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
     /// - Cross-reference validation for leader assignments
     /// - Integration with DataService for persistence operations
     /// - Real-time validation feedback and error reporting
+    /// - Cultural name generation using NameGen service
     /// </summary>
     public class LeadersTabViewModel : MasterDetailViewModelBase<Leader>
     {
@@ -170,21 +172,69 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
 
         #endregion
 
+        #region Leader Name Generation
+
+        /// <summary>
+        /// Generates a culturally appropriate name for a leader based on nationality
+        /// </summary>
+        private string GenerateLeaderName(Nationality nationality)
+        {
+            try
+            {
+                return NameGen.MaleName(nationality);
+            }
+            catch (Exception e)
+            {
+                HammerAndSickle.Services.AppService.HandleException(CLASS_NAME, nameof(GenerateLeaderName), e);
+                // Fallback to default naming pattern
+                return $"Officer {DateTime.Now:HHmmss}";
+            }
+        }
+
+        /// <summary>
+        /// Sets up a newly created leader with nationality and appropriate name
+        /// </summary>
+        private void ConfigureNewLeader(Leader leader, Nationality nationality)
+        {
+            if (leader == null)
+                return;
+
+            try
+            {
+                // Set nationality first
+                leader.SetNationality(nationality);
+                leader.SetSide(Side.Player);
+                leader.SetCommandGrade(CommandGrade.JuniorGrade);
+                leader.SetOfficerCommandAbility(CommandAbility.BelowAverage);
+
+                // Generate and set culturally appropriate name
+                var generatedName = GenerateLeaderName(nationality);
+                if (!leader.SetOfficerName(generatedName))
+                {
+                    // If SetOfficerName fails, try a simpler fallback
+                    leader.SetOfficerName($"Officer {DateTime.Now:mmss}");
+                }
+            }
+            catch (Exception e)
+            {
+                HammerAndSickle.Services.AppService.HandleException(CLASS_NAME, nameof(ConfigureNewLeader), e);
+            }
+        }
+
+        #endregion
+
         #region CRUD Operations
 
         protected override void OnAdd()
         {
             try
             {
-                // Create new leader with default values - use first available nationality
-                var defaultNationality = _availableNationalities.FirstOrDefault();
-                if (defaultNationality == default(Nationality))
-                {
-                    // Fallback to a known good value if available nationalities is empty
-                    defaultNationality = Nationality.USSR;
-                }
+                // Use default nationality or fallback to USSR
+                var defaultNationality = Nationality.USSR;
 
-                var newLeader = new Leader(Side.Player, defaultNationality);
+                // Create new leader using default constructor
+                var newLeader = new Leader();
+                ConfigureNewLeader(newLeader, defaultNationality);
 
                 if (_dataService.AddLeader(newLeader))
                 {
@@ -260,8 +310,11 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
                 var clonedLeader = originalLeader.Clone() as Leader;
                 if (clonedLeader != null)
                 {
-                    // Modify the name to indicate it's a clone
-                    clonedLeader.SetOfficerName($"{originalLeader.Name} (Clone)");
+                    // Generate a completely new name for the clone (no "Clone" suffix)
+                    ConfigureNewLeader(clonedLeader, originalLeader.Nationality);
+
+                    // Ensure the cloned leader has a unique ID and a new name that aligns with nationality.
+                    clonedLeader.SetOfficerName(GenerateLeaderName(originalLeader.Nationality));
 
                     if (_dataService.AddLeader(clonedLeader))
                     {
@@ -424,7 +477,10 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
                 }
 
                 var randomNationality = availableNats[new Random().Next(availableNats.Length)];
-                var newLeader = new Leader(Side.Player, randomNationality);
+
+                // Create new leader using default constructor
+                var newLeader = new Leader();
+                ConfigureNewLeader(newLeader, randomNationality);
 
                 if (_dataService.AddLeader(newLeader))
                 {
@@ -437,7 +493,7 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
                         SelectedItem = addedLeader;
                     }
 
-                    HammerAndSickle.Services.AppService.CaptureUiMessage($"Random leader '{newLeader.Name}' generated");
+                    HammerAndSickle.Services.AppService.CaptureUiMessage($"Random leader '{newLeader.Name}' ({randomNationality}) generated");
                 }
             }
             catch (Exception e)
