@@ -11,9 +11,7 @@
         Width="1600" Height="1200"
 		WindowStartupLocation="CenterScreen">
 
-	<Design.DataContext>
-		<vm:MainWindowViewModel/>
-	</Design.DataContext>
+	<!-- Removed Design.DataContext since we use dependency injection -->
 
 	<DockPanel>
 		<!-- Menu Bar -->

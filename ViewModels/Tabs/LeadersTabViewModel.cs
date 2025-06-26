@@ -3,26 +3,30 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls.Templates;
 using ReactiveUI;
 using HammerAndSickle.Models;
 using HammerAndSickle.Services;
 using HammerSickle.UnitCreator.Services;
 using HammerSickle.UnitCreator.ViewModels.Base;
+using HammerSickle.UnitCreator.Models;
 
 namespace HammerSickle.UnitCreator.ViewModels.Tabs
 {
     /// <summary>
-    /// LeadersTabViewModel manages the Leaders tab interface, providing master-detail editing
-    /// capabilities for Leader objects with CRUD operations, filtering, and validation.
+    /// LeadersTabViewModel manages the Leaders tab interface with full ITabViewModel integration,
+    /// providing master-detail editing capabilities for Leader objects with CRUD operations,
+    /// filtering, validation, and comprehensive tab lifecycle management.
     /// 
     /// Key responsibilities:
     /// - Leader creation, editing, deletion, and cloning operations
-    /// - Filtering by name, nationality, rank, and assignment status
+    /// - Filtering by name, nationality, rank, and assignment status  
     /// - Cross-reference validation for leader assignments
     /// - Integration with DataService for persistence operations
     /// - Real-time validation feedback and error reporting
     /// - Cultural name generation using NameGen service
+    /// - Full ITabViewModel lifecycle support for coordinated file operations
     /// </summary>
     public class LeadersTabViewModel : MasterDetailViewModelBase<Leader>
     {
@@ -71,6 +75,276 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
             OnRefresh();
         }
 
+        #region ITabViewModel Implementation
+
+        public override string TabName => "Leaders";
+
+        public override bool HasUnsavedChanges
+        {
+            get
+            {
+                try
+                {
+                    // Check DataService for unsaved changes
+                    if (_dataService.HasUnsavedChanges)
+                        return true;
+
+                    // Check if there are any leaders in memory that might not be saved
+                    // This is a simple heuristic - in a real application you might track individual object changes
+                    return Items.Count > 0 && (_dataService.TotalObjectCount == 0 || base.HasUnsavedChanges);
+                }
+                catch (Exception e)
+                {
+                    HammerAndSickle.Services.AppService.HandleException(CLASS_NAME, nameof(HasUnsavedChanges), e);
+                    return false;
+                }
+            }
+        }
+
+        public override string StatusSummary
+        {
+            get
+            {
+                try
+                {
+                    var assignedCount = Items.OfType<Leader>().Count(l => l.IsAssigned);
+                    var availableCount = Items.Count - assignedCount;
+                    var validationStatus = IsInValidState ? "Valid" : "Invalid";
+                    var changesStatus = HasUnsavedChanges ? "Modified" : "Saved";
+
+                    return $"Leaders: {Items.Count} total ({assignedCount} assigned, {availableCount} available), {validationStatus}, {changesStatus}";
+                }
+                catch (Exception e)
+                {
+                    HammerAndSickle.Services.AppService.HandleException(CLASS_NAME, nameof(StatusSummary), e);
+                    return "Leaders: Status unavailable";
+                }
+            }
+        }
+
+        #endregion
+
+        #region Enhanced Tab Lifecycle Operations
+
+        public override async Task<OperationResult> ValidateAsync()
+        {
+            try
+            {
+                IsBusy = true;
+
+                var result = new ValidationResult();
+                int validatedCount = 0;
+
+                // Validate all leaders in the collection
+                foreach (var leader in Items.OfType<Leader>())
+                {
+                    var leaderResult = _validationService.ValidateLeader(leader);
+                    result.Merge(leaderResult);
+                    validatedCount++;
+                }
+
+                // Check for cross-reference issues
+                await ValidateCrossReferences(result);
+
+                var operationResult = result.IsValid
+                    ? OperationResult.Successful($"Leaders validation passed: {validatedCount} leaders validated")
+                    : OperationResult.ValidationFailed(result.Errors);
+
+                LastValidationResult = operationResult;
+
+                this.RaisePropertyChanged(nameof(IsInValidState));
+                this.RaisePropertyChanged(nameof(StatusSummary));
+
+                return operationResult;
+            }
+            catch (Exception e)
+            {
+                var errorResult = OperationResult.FromException(e, "Leaders validation failed");
+                LastValidationResult = errorResult;
+                HammerAndSickle.Services.AppService.HandleException(CLASS_NAME, nameof(ValidateAsync), e);
+                return errorResult;
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        public override async Task<OperationResult> PrepareForSaveAsync()
+        {
+            try
+            {
+                IsBusy = true;
+
+                // Validate all leaders before save
+                var validationResult = await ValidateAsync();
+                if (!validationResult.Success)
+                {
+                    return validationResult;
+                }
+
+                // Ensure all leaders are properly synced with DataService
+                await SyncLeadersToDataService();
+
+                return OperationResult.Successful($"Leaders prepared for save: {Items.Count} leaders ready");
+            }
+            catch (Exception e)
+            {
+                HammerAndSickle.Services.AppService.HandleException(CLASS_NAME, nameof(PrepareForSaveAsync), e);
+                return OperationResult.FromException(e, "Leaders save preparation failed");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        public override async Task<OperationResult> RefreshFromDataAsync()
+        {
+            try
+            {
+                IsBusy = true;
+
+                // Sync collections from DataService
+                _dataService.SyncCollectionsFromManager();
+
+                // Refresh the UI collection
+                OnRefresh();
+
+                this.RaisePropertyChanged(nameof(StatusSummary));
+                this.RaisePropertyChanged(nameof(HasUnsavedChanges));
+
+                return OperationResult.Successful($"Leaders refreshed: {Items.Count} leaders loaded from data service");
+            }
+            catch (Exception e)
+            {
+                HammerAndSickle.Services.AppService.HandleException(CLASS_NAME, nameof(RefreshFromDataAsync), e);
+                return OperationResult.FromException(e, "Leaders refresh failed");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        public override async Task<OperationResult> ClearAllDataAsync()
+        {
+            try
+            {
+                IsBusy = true;
+
+                var originalCount = Items.Count;
+
+                // Clear UI collections
+                Items.Clear();
+                ValidationSummaryItems.Clear();
+                ShowValidationSummary = false;
+                SelectedItem = null;
+                LastValidationResult = null;
+
+                // Clear filters
+                SelectedNationalityFilter = null;
+                SelectedCommandGradeFilter = null;
+                IsAssignedFilter = null;
+                FilterText = string.Empty;
+
+                this.RaisePropertyChanged(nameof(StatusSummary));
+                this.RaisePropertyChanged(nameof(HasUnsavedChanges));
+
+                return OperationResult.Successful($"Leaders cleared: {originalCount} leaders removed");
+            }
+            catch (Exception e)
+            {
+                HammerAndSickle.Services.AppService.HandleException(CLASS_NAME, nameof(ClearAllDataAsync), e);
+                return OperationResult.FromException(e, "Leaders clear failed");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+        }
+
+        #endregion
+
+        #region Enhanced Validation
+
+        protected override ValidationResult ValidateItem(Leader item)
+        {
+            return _validationService.ValidateLeader(item);
+        }
+
+        protected override ValidationResult ValidateSelectedItem()
+        {
+            if (SelectedItem is Leader leader)
+            {
+                return _validationService.ValidateLeader(leader);
+            }
+            return new ValidationResult(); // Valid if no selection
+        }
+
+        private async Task ValidateCrossReferences(ValidationResult result)
+        {
+            try
+            {
+                await Task.Delay(1); // Make it async
+
+                // Check for assignment consistency across the entire dataset
+                var assignmentIssues = new List<string>();
+
+                foreach (var leader in Items.OfType<Leader>().Where(l => l.IsAssigned))
+                {
+                    if (string.IsNullOrEmpty(leader.UnitID))
+                    {
+                        assignmentIssues.Add($"Leader '{leader.Name}' marked as assigned but has no unit ID");
+                    }
+                    else
+                    {
+                        // Check if the unit exists (this would require access to units collection)
+                        var unit = _dataService.CombatUnits.FirstOrDefault(u => u.UnitID == leader.UnitID);
+                        if (unit == null)
+                        {
+                            assignmentIssues.Add($"Leader '{leader.Name}' assigned to non-existent unit '{leader.UnitID}'");
+                        }
+                        else if (unit.CommandingOfficer?.LeaderID != leader.LeaderID)
+                        {
+                            assignmentIssues.Add($"Leader '{leader.Name}' assignment to unit '{leader.UnitID}' is not bidirectional");
+                        }
+                    }
+                }
+
+                result.AddErrors(assignmentIssues);
+            }
+            catch (Exception e)
+            {
+                HammerAndSickle.Services.AppService.HandleException(CLASS_NAME, nameof(ValidateCrossReferences), e);
+                result.AddError($"Cross-reference validation failed: {e.Message}");
+            }
+        }
+
+        private async Task SyncLeadersToDataService()
+        {
+            try
+            {
+                await Task.Delay(1); // Make it async
+
+                // Ensure all leaders in the UI are properly registered with DataService
+                foreach (var leader in Items.OfType<Leader>())
+                {
+                    if (!_dataService.Leaders.Contains(leader))
+                    {
+                        _dataService.UpdateLeader(leader);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                HammerAndSickle.Services.AppService.HandleException(CLASS_NAME, nameof(SyncLeadersToDataService), e);
+                throw;
+            }
+        }
+
+        #endregion
+
         #region Enum Filtering Methods
 
         /// <summary>
@@ -118,13 +392,11 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         /// </summary>
         private bool IsValidNationality(Nationality nationality)
         {
-            // Filter out any values that shouldn't be selectable
-            // Check for common sentinel values without assuming they exist
             var name = nationality.ToString();
             return !name.Equals("None", StringComparison.OrdinalIgnoreCase) &&
                    !name.Equals("Invalid", StringComparison.OrdinalIgnoreCase) &&
                    !name.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
-                   (int)nationality >= 0; // Assuming negative values are invalid
+                   (int)nationality >= 0;
         }
 
         /// <summary>
@@ -132,12 +404,11 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         /// </summary>
         private bool IsValidCommandGrade(CommandGrade grade)
         {
-            // Filter out any values that shouldn't be selectable
             var name = grade.ToString();
             return !name.Equals("None", StringComparison.OrdinalIgnoreCase) &&
                    !name.Equals("Invalid", StringComparison.OrdinalIgnoreCase) &&
                    !name.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
-                   (int)grade >= 0; // Assuming negative values are invalid
+                   (int)grade >= 0;
         }
 
         /// <summary>
@@ -145,12 +416,11 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         /// </summary>
         private bool IsValidSide(Side side)
         {
-            // Filter out any values that shouldn't be selectable
             var name = side.ToString();
             return !name.Equals("None", StringComparison.OrdinalIgnoreCase) &&
                    !name.Equals("Invalid", StringComparison.OrdinalIgnoreCase) &&
                    !name.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
-                   (int)side >= 0; // Assuming negative values are invalid
+                   (int)side >= 0;
         }
 
         /// <summary>
@@ -158,12 +428,11 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         /// </summary>
         private bool IsValidCommandAbility(CommandAbility ability)
         {
-            // Filter out any values that shouldn't be selectable
             var name = ability.ToString();
             return !name.Equals("None", StringComparison.OrdinalIgnoreCase) &&
                    !name.Equals("Invalid", StringComparison.OrdinalIgnoreCase) &&
                    !name.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
-                   (int)ability >= 0; // Assuming negative values are invalid
+                   (int)ability >= 0;
         }
 
         #endregion
@@ -263,7 +532,6 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
             catch (Exception e)
             {
                 HammerAndSickle.Services.AppService.HandleException(CLASS_NAME, nameof(GenerateLeaderName), e);
-                // Fallback to default naming pattern
                 return $"Officer {DateTime.Now:HHmmss}";
             }
         }
@@ -288,7 +556,6 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
                 var generatedName = GenerateLeaderName(nationality);
                 if (!leader.SetOfficerName(generatedName))
                 {
-                    // If SetOfficerName fails, try a simpler fallback
                     leader.SetOfficerName($"Officer {DateTime.Now:mmss}");
                 }
             }
@@ -306,10 +573,8 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         {
             try
             {
-                // Use default nationality or fallback to USSR
                 var defaultNationality = Nationality.USSR;
 
-                // Create new leader using default constructor
                 var newLeader = new Leader();
                 ConfigureNewLeader(newLeader, defaultNationality);
 
@@ -317,7 +582,6 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
                 {
                     RefreshItemsCollection();
 
-                    // Select the new leader
                     var addedLeader = Items.OfType<Leader>().FirstOrDefault(l => l.LeaderID == newLeader.LeaderID);
                     if (addedLeader != null)
                     {
@@ -344,7 +608,6 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
 
             try
             {
-                // Validate deletion is allowed
                 var validationResult = _validationService.ValidateLeaderDeletion(leader.LeaderID);
                 if (!validationResult.IsValid)
                 {
@@ -357,7 +620,6 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
                 {
                     RefreshItemsCollection();
 
-                    // Clear selection if deleted leader was selected
                     if (SelectedItem == leader)
                     {
                         ClearSelection();
@@ -383,21 +645,16 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
 
             try
             {
-                // Clone the leader
                 var clonedLeader = originalLeader.Clone() as Leader;
                 if (clonedLeader != null)
                 {
-                    // Generate a completely new name for the clone (no "Clone" suffix)
                     ConfigureNewLeader(clonedLeader, originalLeader.Nationality);
-
-                    // Ensure the cloned leader has a unique ID and a new name that aligns with nationality.
                     clonedLeader.SetOfficerName(GenerateLeaderName(originalLeader.Nationality));
 
                     if (_dataService.AddLeader(clonedLeader))
                     {
                         RefreshItemsCollection();
 
-                        // Select the cloned leader
                         var addedLeader = Items.OfType<Leader>().FirstOrDefault(l => l.LeaderID == clonedLeader.LeaderID);
                         if (addedLeader != null)
                         {
@@ -442,7 +699,6 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
             {
                 var filteredLeaders = _dataService.Leaders.AsEnumerable();
 
-                // Apply text filter
                 if (!string.IsNullOrWhiteSpace(FilterText))
                 {
                     var filterLower = FilterText.ToLowerInvariant();
@@ -452,25 +708,21 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
                         l.GetFormattedRank().ToLowerInvariant().Contains(filterLower));
                 }
 
-                // Apply nationality filter
                 if (SelectedNationalityFilter.HasValue)
                 {
                     filteredLeaders = filteredLeaders.Where(l => l.Nationality == SelectedNationalityFilter.Value);
                 }
 
-                // Apply command grade filter
                 if (SelectedCommandGradeFilter.HasValue)
                 {
                     filteredLeaders = filteredLeaders.Where(l => l.CommandGrade == SelectedCommandGradeFilter.Value);
                 }
 
-                // Apply assignment status filter
                 if (IsAssignedFilter.HasValue)
                 {
                     filteredLeaders = filteredLeaders.Where(l => l.IsAssigned == IsAssignedFilter.Value);
                 }
 
-                // Update Items collection
                 Items.Clear();
                 foreach (var leader in filteredLeaders.OrderBy(l => l.Name))
                 {
@@ -485,17 +737,7 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
 
         #endregion
 
-        #region Validation
-
-        protected override ValidationResult ValidateSelectedItem()
-        {
-            if (SelectedItem is Leader leader)
-            {
-                return _validationService.ValidateLeader(leader);
-            }
-
-            return new ValidationResult(); // Valid if no selection
-        }
+        #region Enhanced Validation
 
         public override bool CanDelete => base.CanDelete && ValidateCanDelete(SelectedItem);
 
@@ -525,7 +767,7 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
             {
                 SelectedNationalityFilter = null;
                 SelectedCommandGradeFilter = null;
-                IsAssignedFilter = null;  // This will automatically update AssignmentFilterIndex
+                IsAssignedFilter = null;
                 FilterText = string.Empty;
 
                 HammerAndSickle.Services.AppService.CaptureUiMessage("Filters cleared");
@@ -545,17 +787,14 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         {
             try
             {
-                // Use available nationalities instead of hardcoded list
                 var availableNats = _availableNationalities.Where(n => IsValidNationality(n)).ToArray();
                 if (!availableNats.Any())
                 {
-                    // Fallback to known values if available nationalities is empty
                     availableNats = new[] { Nationality.USSR };
                 }
 
                 var randomNationality = availableNats[new Random().Next(availableNats.Length)];
 
-                // Create new leader using default constructor
                 var newLeader = new Leader();
                 ConfigureNewLeader(newLeader, randomNationality);
 
@@ -563,7 +802,6 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
                 {
                     RefreshItemsCollection();
 
-                    // Select the new leader
                     var addedLeader = Items.OfType<Leader>().FirstOrDefault(l => l.LeaderID == newLeader.LeaderID);
                     if (addedLeader != null)
                     {
