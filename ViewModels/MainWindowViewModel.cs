@@ -37,6 +37,9 @@ namespace HammerSickle.UnitCreator.ViewModels
         private readonly TabManagerService _tabManagerService;
         private readonly DataService _dataService;
 
+        // Add window reference
+        private Avalonia.Controls.Window? _mainWindow;
+
         // UI State
         private int _selectedTabIndex;
         private string _statusMessage = "Ready";
@@ -686,14 +689,33 @@ namespace HammerSickle.UnitCreator.ViewModels
         #region Helper Methods
 
         /// <summary>
+        /// Sets the main window reference for dialog operations
+        /// </summary>
+        public void SetMainWindow(Avalonia.Controls.Window mainWindow)
+        {
+            try
+            {
+                _mainWindow = mainWindow ?? throw new ArgumentNullException(nameof(mainWindow));
+                AppService.CaptureUiMessage("MainWindow reference set for dialog operations");
+            }
+            catch (Exception e)
+            {
+                AppService.HandleException(CLASS_NAME, nameof(SetMainWindow), e);
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Gets the main window for dialog parent (placeholder implementation)
         /// This will need to be provided by the View layer
         /// </summary>
         private Avalonia.Controls.Window? GetMainWindow()
         {
-            // TODO: This should be injected or provided by the View
-            // For now, return null - FileDialogService handles this gracefully
-            return null;
+            if (_mainWindow == null)
+            {
+                AppService.CaptureUiMessage("Warning: MainWindow reference is null - dialogs may not work properly");
+            }
+            return _mainWindow;
         }
 
         #endregion
