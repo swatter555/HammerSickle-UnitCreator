@@ -282,7 +282,7 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
                 leader.SetNationality(nationality);
                 leader.SetSide(Side.Player);
                 leader.SetCommandGrade(CommandGrade.JuniorGrade);
-                leader.SetOfficerCommandAbility(CommandAbility.BelowAverage);
+                leader.SetOfficerCommandAbility(CommandAbility.Average);
 
                 // Generate and set culturally appropriate name
                 var generatedName = GenerateLeaderName(nationality);

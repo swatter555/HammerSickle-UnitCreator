@@ -162,7 +162,7 @@ namespace HammerAndSickle.Models
         private Nationality _nationality = Nationality.USSR;
         private CommandGrade _commandGrade = CommandGrade.JuniorGrade;
         private int _reputationPoints = 0;
-        private CommandAbility _combatCommand = CommandAbility.BelowAverage;
+        private CommandAbility _combatCommand = CommandAbility.Average;
         private bool _isAssigned = false;
         private string? _unitID = null;
 
