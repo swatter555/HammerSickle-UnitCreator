@@ -26,26 +26,26 @@
 
 							<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto">
 								<!-- Name -->
-								<TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Classes="field-label" Margin="0,0,8,4"/>
+								<TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Classes="field-label" Margin="0,0,8,8"/>
 								<TextBox Grid.Row="0" Grid.Column="1"
 								         Text="{Binding Name}"
 								         Watermark="Enter leader name"
-								         Margin="0,0,0,4"/>
+								         Margin="0,0,0,8"/>
 
 								<!-- Leader ID (Read-only) -->
-								<TextBlock Grid.Row="1" Grid.Column="0" Text="Leader ID:" Classes="field-label" Margin="0,0,8,4"/>
+								<TextBlock Grid.Row="1" Grid.Column="0" Text="Leader ID:" Classes="field-label" Margin="0,0,8,8"/>
 								<TextBox Grid.Row="1" Grid.Column="1"
 								         Text="{Binding LeaderID}"
 								         IsReadOnly="True"
 								         Classes="readonly"
-								         Margin="0,0,0,4"/>
+								         Margin="0,0,0,8"/>
 
 								<!-- Side -->
-								<TextBlock Grid.Row="2" Grid.Column="0" Text="Side:" Classes="field-label" Margin="0,0,8,4"/>
+								<TextBlock Grid.Row="2" Grid.Column="0" Text="Side:" Classes="field-label" Margin="0,0,8,8"/>
 								<ComboBox Grid.Row="2" Grid.Column="1"
 								          ItemsSource="{Binding DataContext.AvailableSides, RelativeSource={RelativeSource AncestorType=UserControl}}"
 								          SelectedItem="{Binding Side}"
-								          Margin="0,0,0,4"/>
+								          Margin="0,0,0,8"/>
 
 								<!-- Nationality -->
 								<TextBlock Grid.Row="3" Grid.Column="0" Text="Nationality:" Classes="field-label" Margin="0,0,8,0"/>
@@ -63,26 +63,26 @@
 
 							<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto">
 								<!-- Command Grade -->
-								<TextBlock Grid.Row="0" Grid.Column="0" Text="Command Grade:" Classes="field-label" Margin="0,0,8,4"/>
+								<TextBlock Grid.Row="0" Grid.Column="0" Text="Command Grade:" Classes="field-label" Margin="0,0,8,8"/>
 								<ComboBox Grid.Row="0" Grid.Column="1"
 								          ItemsSource="{Binding DataContext.AvailableCommandGrades, RelativeSource={RelativeSource AncestorType=UserControl}}"
 								          SelectedItem="{Binding CommandGrade}"
-								          Margin="0,0,0,4"/>
+								          Margin="0,0,0,8"/>
 
 								<!-- Formatted Rank (Read-only) -->
-								<TextBlock Grid.Row="1" Grid.Column="0" Text="Rank:" Classes="field-label" Margin="0,0,8,4"/>
+								<TextBlock Grid.Row="1" Grid.Column="0" Text="Rank:" Classes="field-label" Margin="0,0,8,8"/>
 								<TextBox Grid.Row="1" Grid.Column="1"
 								         Text="{Binding FormattedRank}"
 								         IsReadOnly="True"
 								         Classes="readonly"
-								         Margin="0,0,0,4"/>
+								         Margin="0,0,0,8"/>
 
 								<!-- Combat Command -->
-								<TextBlock Grid.Row="2" Grid.Column="0" Text="Combat Command:" Classes="field-label" Margin="0,0,8,4"/>
+								<TextBlock Grid.Row="2" Grid.Column="0" Text="Combat Command:" Classes="field-label" Margin="0,0,8,8"/>
 								<ComboBox Grid.Row="2" Grid.Column="1"
 								          ItemsSource="{Binding DataContext.AvailableCommandAbilities, RelativeSource={RelativeSource AncestorType=UserControl}}"
 								          SelectedItem="{Binding CombatCommand}"
-								          Margin="0,0,0,4"/>
+								          Margin="0,0,0,8"/>
 
 								<!-- Reputation Points -->
 								<TextBlock Grid.Row="3" Grid.Column="0" Text="Reputation Points:" Classes="field-label" Margin="0,0,8,0"/>
@@ -102,11 +102,11 @@
 
 							<Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
 								<!-- Is Assigned (Read-only) -->
-								<TextBlock Grid.Row="0" Grid.Column="0" Text="Assigned:" Classes="field-label" Margin="0,0,8,4"/>
+								<TextBlock Grid.Row="0" Grid.Column="0" Text="Assigned:" Classes="field-label" Margin="0,0,8,8"/>
 								<CheckBox Grid.Row="0" Grid.Column="1"
 								          IsChecked="{Binding IsAssigned}"
 								          IsEnabled="False"
-								          Margin="0,0,0,4"/>
+								          Margin="0,0,0,8"/>
 
 								<!-- Unit ID (Read-only) -->
 								<TextBlock Grid.Row="1" Grid.Column="0" Text="Assigned Unit:" Classes="field-label" Margin="0,0,8,0"/>
@@ -234,7 +234,7 @@
 				<Grid ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto" Margin="8">
 
 					<!-- Nationality Filter -->
-					<StackPanel Grid.Column="0" Margin="0,0,8,0">
+					<StackPanel Grid.Column="0" Margin="0,0,8,8">
 						<TextBlock Text="Nationality:" FontWeight="Medium" Margin="0,0,0,4"/>
 						<ComboBox ItemsSource="{Binding AvailableNationalities}"
 						          SelectedItem="{Binding SelectedNationalityFilter}"
@@ -243,7 +243,7 @@
 					</StackPanel>
 
 					<!-- Command Grade Filter -->
-					<StackPanel Grid.Column="1" Margin="0,0,8,0">
+					<StackPanel Grid.Column="1" Margin="0,0,8,8">
 						<TextBlock Text="Command Grade:" FontWeight="Medium" Margin="0,0,0,4"/>
 						<ComboBox ItemsSource="{Binding AvailableCommandGrades}"
 						          SelectedItem="{Binding SelectedCommandGradeFilter}"
@@ -252,7 +252,7 @@
 					</StackPanel>
 
 					<!-- Assignment Status Filter -->
-					<StackPanel Grid.Column="2" Margin="0,0,8,0">
+					<StackPanel Grid.Column="2" Margin="0,0,8,8">
 						<TextBlock Text="Assignment Status:" FontWeight="Medium" Margin="0,0,0,4"/>
 						<ComboBox SelectedValue="{Binding IsAssignedFilter}" MinWidth="120" PlaceholderText="All Leaders">
 							<ComboBoxItem Content="All Leaders" Tag="{x:Null}"/>
@@ -262,7 +262,7 @@
 					</StackPanel>
 
 					<!-- Action Buttons -->
-					<StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Bottom" Spacing="4">
+					<StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Bottom" Spacing="4" Margin="0,0,0,8">
 						<Button Content="Clear Filters"
 						        Command="{Binding ClearFiltersCommand}"
 						        Classes="outline"

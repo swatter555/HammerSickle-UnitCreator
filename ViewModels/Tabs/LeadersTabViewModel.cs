@@ -37,6 +37,8 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         // Collections for dropdowns - properly filtered without assuming None values
         private readonly List<Nationality> _availableNationalities;
         private readonly List<CommandGrade> _availableCommandGrades;
+        private readonly List<Side> _availableSides;
+        private readonly List<CommandAbility> _availableCommandAbilities;
 
         public LeadersTabViewModel() : this(new DataService(), new ValidationService(new DataService()))
         {
@@ -45,10 +47,11 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         public LeadersTabViewModel(DataService dataService, ValidationService validationService)
             : base(dataService, validationService)
         {
-            // Initialize nationality collection - get all values and filter out any that shouldn't be shown
-            // Instead of assuming 'None' exists, we'll filter based on actual enum structure
+            // Initialize dropdown collections - get all values and filter out any that shouldn't be shown
             _availableNationalities = GetValidNationalities().ToList();
             _availableCommandGrades = GetValidCommandGrades().ToList();
+            _availableSides = GetValidSides().ToList();
+            _availableCommandAbilities = GetValidCommandAbilities().ToList();
 
             // Initialize filter commands
             ClearFiltersCommand = ReactiveCommand.Create(ExecuteClearFilters);
@@ -91,6 +94,26 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
         }
 
         /// <summary>
+        /// Gets valid sides, filtering out any sentinel/invalid values
+        /// </summary>
+        private IEnumerable<Side> GetValidSides()
+        {
+            return Enum.GetValues<Side>()
+                .Where(IsValidSide)
+                .OrderBy(s => s.ToString());
+        }
+
+        /// <summary>
+        /// Gets valid command abilities, filtering out any sentinel/invalid values
+        /// </summary>
+        private IEnumerable<CommandAbility> GetValidCommandAbilities()
+        {
+            return Enum.GetValues<CommandAbility>()
+                .Where(IsValidCommandAbility)
+                .OrderBy(c => c.ToString());
+        }
+
+        /// <summary>
         /// Determines if a nationality is valid for display/selection
         /// </summary>
         private bool IsValidNationality(Nationality nationality)
@@ -115,6 +138,32 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
                    !name.Equals("Invalid", StringComparison.OrdinalIgnoreCase) &&
                    !name.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
                    (int)grade >= 0; // Assuming negative values are invalid
+        }
+
+        /// <summary>
+        /// Determines if a side is valid for display/selection
+        /// </summary>
+        private bool IsValidSide(Side side)
+        {
+            // Filter out any values that shouldn't be selectable
+            var name = side.ToString();
+            return !name.Equals("None", StringComparison.OrdinalIgnoreCase) &&
+                   !name.Equals("Invalid", StringComparison.OrdinalIgnoreCase) &&
+                   !name.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
+                   (int)side >= 0; // Assuming negative values are invalid
+        }
+
+        /// <summary>
+        /// Determines if a command ability is valid for display/selection
+        /// </summary>
+        private bool IsValidCommandAbility(CommandAbility ability)
+        {
+            // Filter out any values that shouldn't be selectable
+            var name = ability.ToString();
+            return !name.Equals("None", StringComparison.OrdinalIgnoreCase) &&
+                   !name.Equals("Invalid", StringComparison.OrdinalIgnoreCase) &&
+                   !name.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
+                   (int)ability >= 0; // Assuming negative values are invalid
         }
 
         #endregion
@@ -145,8 +194,11 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
             set => this.RaiseAndSetIfChanged(ref _showFilters, value);
         }
 
+        // Dropdown collections for UI binding
         public List<Nationality> AvailableNationalities => _availableNationalities;
         public List<CommandGrade> AvailableCommandGrades => _availableCommandGrades;
+        public List<Side> AvailableSides => _availableSides;
+        public List<CommandAbility> AvailableCommandAbilities => _availableCommandAbilities;
 
         #endregion
 
