@@ -43,14 +43,14 @@
 								<!-- Side -->
 								<TextBlock Grid.Row="2" Grid.Column="0" Text="Side:" Classes="field-label" Margin="0,0,8,8"/>
 								<ComboBox Grid.Row="2" Grid.Column="1"
-								          ItemsSource="{Binding DataContext.AvailableSides, RelativeSource={RelativeSource AncestorType=UserControl}}"
+								          ItemsSource="{Binding $parent[UserControl].DataContext.AvailableSides}"
 								          SelectedItem="{Binding Side}"
 								          Margin="0,0,0,8"/>
 
 								<!-- Nationality -->
 								<TextBlock Grid.Row="3" Grid.Column="0" Text="Nationality:" Classes="field-label" Margin="0,0,8,0"/>
 								<ComboBox Grid.Row="3" Grid.Column="1"
-								          ItemsSource="{Binding DataContext.AvailableNationalities, RelativeSource={RelativeSource AncestorType=UserControl}}"
+								          ItemsSource="{Binding $parent[UserControl].DataContext.AvailableNationalities}"
 								          SelectedItem="{Binding Nationality}"/>
 							</Grid>
 						</StackPanel>
@@ -65,7 +65,7 @@
 								<!-- Command Grade -->
 								<TextBlock Grid.Row="0" Grid.Column="0" Text="Command Grade:" Classes="field-label" Margin="0,0,8,8"/>
 								<ComboBox Grid.Row="0" Grid.Column="1"
-								          ItemsSource="{Binding DataContext.AvailableCommandGrades, RelativeSource={RelativeSource AncestorType=UserControl}}"
+								          ItemsSource="{Binding $parent[UserControl].DataContext.AvailableCommandGrades}"
 								          SelectedItem="{Binding CommandGrade}"
 								          Margin="0,0,0,8"/>
 
@@ -80,7 +80,7 @@
 								<!-- Combat Command -->
 								<TextBlock Grid.Row="2" Grid.Column="0" Text="Combat Command:" Classes="field-label" Margin="0,0,8,8"/>
 								<ComboBox Grid.Row="2" Grid.Column="1"
-								          ItemsSource="{Binding DataContext.AvailableCommandAbilities, RelativeSource={RelativeSource AncestorType=UserControl}}"
+								          ItemsSource="{Binding $parent[UserControl].DataContext.AvailableCommandAbilities}"
 								          SelectedItem="{Binding CombatCommand}"
 								          Margin="0,0,0,8"/>
 
@@ -254,10 +254,12 @@
 					<!-- Assignment Status Filter -->
 					<StackPanel Grid.Column="2" Margin="0,0,8,8">
 						<TextBlock Text="Assignment Status:" FontWeight="Medium" Margin="0,0,0,4"/>
-						<ComboBox SelectedValue="{Binding IsAssignedFilter}" MinWidth="120" PlaceholderText="All Leaders">
-							<ComboBoxItem Content="All Leaders" Tag="{x:Null}"/>
-							<ComboBoxItem Content="Assigned" Tag="True"/>
-							<ComboBoxItem Content="Available" Tag="False"/>
+						<ComboBox SelectedIndex="{Binding AssignmentFilterIndex}"
+								  MinWidth="120"
+								  PlaceholderText="All Leaders">
+							<ComboBoxItem Content="All Leaders"/>
+							<ComboBoxItem Content="Assigned"/>
+							<ComboBoxItem Content="Available"/>
 						</ComboBox>
 					</StackPanel>
 

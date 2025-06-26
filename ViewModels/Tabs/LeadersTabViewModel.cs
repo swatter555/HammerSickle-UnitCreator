@@ -188,6 +188,31 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
             set => this.RaiseAndSetIfChanged(ref _isAssignedFilter, value);
         }
 
+        /// <summary>
+        /// Index-based assignment filter for ComboBox binding (0=All, 1=Assigned, 2=Available)
+        /// </summary>
+        public int AssignmentFilterIndex
+        {
+            get => _isAssignedFilter switch
+            {
+                null => 0,    // All Leaders
+                true => 1,    // Assigned
+                false => 2    // Available
+            };
+            set
+            {
+                var newValue = value switch
+                {
+                    0 => (bool?)null,  // All Leaders
+                    1 => true,         // Assigned
+                    2 => false,        // Available
+                    _ => null          // Default to All
+                };
+                this.RaiseAndSetIfChanged(ref _isAssignedFilter, newValue, nameof(IsAssignedFilter));
+                this.RaisePropertyChanged(); // For AssignmentFilterIndex itself
+            }
+        }
+
         public bool ShowFilters
         {
             get => _showFilters;
@@ -500,7 +525,7 @@ namespace HammerSickle.UnitCreator.ViewModels.Tabs
             {
                 SelectedNationalityFilter = null;
                 SelectedCommandGradeFilter = null;
-                IsAssignedFilter = null;
+                IsAssignedFilter = null;  // This will automatically update AssignmentFilterIndex
                 FilterText = string.Empty;
 
                 HammerAndSickle.Services.AppService.CaptureUiMessage("Filters cleared");
